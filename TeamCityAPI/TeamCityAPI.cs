@@ -11,30 +11,22 @@ using System.Xml;
 
 namespace Inedo.BuildMasterExtensions.TeamCity
 {
-
-    //public class TeamCityAPIContext
-    //{
-    //    public TeamCityBuildType BuildType { get; set; }
-    //    public TeamCityBuild Build { get; set; }
-
-    //    public string BuildConfigurationId { get; set; }
-    //    public string ProjectName { get; set; }
-    //    public string BuildConfigurationName { get; set; }
-    //    public string BuildNumber { get; set; } // version
-    //    public string BranchName { get; set; }
-    //}
-
+    
+    /// <summary>
+    /// Defines a wrapper for TeamCity API calls
+    /// </summary>
+    /// <remarks>An instance of this class could be made availble in the base <see cref="Operations.Operation"/> class</remarks>
     internal class TeamCityAPI
     {
 
         public IConnectionInfo ConnectionInfo { get; }
         public ILogger Logger { get; }
-        public IGenericBuildMasterContext BuildMasterContext { get; }
+        //public IGenericBuildMasterContext BuildMasterContext { get; }
 
         public TeamCityAPI(IConnectionInfo connectionInfo, ILogger logger = null, IGenericBuildMasterContext context = null) {
             Logger = logger ?? Logger; // fallback on static class if null
             ConnectionInfo = connectionInfo;
-            BuildMasterContext = context;
+            //BuildMasterContext = context;
         }
 
         public List<TeamCityBuildType> GetBuildTypes()

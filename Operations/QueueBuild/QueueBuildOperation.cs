@@ -9,6 +9,11 @@ using Inedo.BuildMaster.Web;
 
 namespace Inedo.BuildMasterExtensions.TeamCity.Operations
 {
+    /// <summary>
+    /// This class defines a Plan operation which triggers a teamcity build.
+    /// It uses the Resource Credentials via its base class <see cref="Operation"/>.
+    /// The work logic is performed in <see cref="QueueBuildOperationManager"/>.
+    /// </summary>
     [DisplayName("Queue TeamCity Build")]
     [Description("Queues a build in TeamCity, optionally waiting for its completion.")]
     [ScriptAlias("Queue-Build")]
@@ -44,13 +49,8 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
 
         public override Task ExecuteAsync(IOperationExecutionContext context)
         {
-            this.manager = new QueueBuildOperationManager(this, this, context)
-            {
-                BuildConfigurationId = this.BuildConfigurationId,
-                //AdditionalParameters = this.AdditionalParameters,
-                WaitForCompletion = this.WaitForCompletion,
-                BranchName = this.BranchName
-            };
+            // Note: here we are passing the connectionInfo data from the base class's Credentials (hence we are not using legacy Configuration Profiles)
+            this.manager = new QueueBuildOperationManager(this, context);
 
             return this.manager.QueueBuildAsync(context.CancellationToken, logProgressToExecutionLog: true);
         }
@@ -62,13 +62,13 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
 
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
         {
-            string branchName = (string)config[nameof(this.BranchName)] ?? "default";
+            string branchName = config[nameof(this.BranchName)];
             string buildConfigurationId = config[nameof(this.BuildConfigurationId)];
 
             return new ExtendedRichDescription(
                 new RichDescription("Queue TeamCity Build"),
                 new RichDescription(
-                    " on branch ", new Hilite(branchName),
+                    " on branch ", new Hilite(string.IsNullOrEmpty(branchName) ? "default" : BranchName),
                     " of build configuration ", new Hilite(buildConfigurationId)
                 )
             );

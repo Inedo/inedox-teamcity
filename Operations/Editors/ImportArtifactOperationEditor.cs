@@ -12,7 +12,10 @@ using System.Threading.Tasks;
 
 namespace Inedo.BuildMasterExtensions.TeamCity.Operations
 {
-
+    /// <summary>
+    /// Defines a custom editor for the ImportArtifactOperation
+    /// Not in use.
+    /// </summary>
     public class ImportArtifactOperationEditor : Inedo.BuildMaster.Web.Controls.Plans.OperationEditor
     {
         public ImportArtifactOperationEditor(Type operationType) : base(operationType) { }

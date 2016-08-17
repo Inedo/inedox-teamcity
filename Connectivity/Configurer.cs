@@ -7,13 +7,13 @@ using Inedo.Serialization;
 using System.Collections.Generic;
 
 [assembly: ExtensionConfigurer(typeof(Inedo.BuildMasterExtensions.TeamCity.Configurer))]
-
 namespace Inedo.BuildMasterExtensions.TeamCity
 {
     /// <summary>
     /// LEGACY
     /// </summary>
     [CustomEditor(typeof(ConfigurerEditor))]
+    [Obsolete("Configuration Profile have been replaced by Resource Credentials")]
     public class Configurer : ExtensionConfigurerBase, IConnectionInfo
     {
         internal static readonly string ConfigurerName = typeof(Configurer).FullName + "," + typeof(Configurer).Assembly.GetName().Name;
@@ -52,13 +52,13 @@ namespace Inedo.BuildMasterExtensions.TeamCity
         public string ServerUrl { get; set; }
 
         /// <summary>
-        /// Gets or sets the username.
+        /// Gets or sets the username when using BASIC httpAuth.
         /// </summary>
         [Persistent]
         public string UserName { get; set; }
 
         /// <summary>
-        /// Gets or sets the password.
+        /// Gets or sets the password when using BASIC httpAuth.
         /// </summary>
         [Persistent(Encrypted = true)]
         public string Password { get; set; }
@@ -73,17 +73,6 @@ namespace Inedo.BuildMasterExtensions.TeamCity
         /// Gets the base URL used for connections to the TeamCity server that incorporates the authentication mechanism.
         /// </summary>
         public string BaseUrl => $"{this.ServerUrl.TrimEnd('/')}/{(string.IsNullOrEmpty(this.UserName) ? "guestAuth" : "httpAuth")}/";
-
-        
-        internal TeamCityAPI GetAPI()
-        {
-            return new TeamCityAPI(this);
-        }
-
-        internal static TeamCityAPI GetConfigurerAPI()
-        {
-            return new TeamCityAPI(GetConfigurer());
-        }
 
     }
 }

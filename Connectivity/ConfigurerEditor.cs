@@ -5,8 +5,11 @@ using Inedo.Web.Controls;
 namespace Inedo.BuildMasterExtensions.TeamCity
 {
     /// <summary>
-    /// LEGACY
+    /// This LEGACY class provides the UI building logic for the LEGACY Configuration Profile area,
+    /// which is now replaced by Resource Credentials on v5.0+ ; 
+    /// Web link  : /administration/extensions/extension?ExtensionName=TeamCity
     /// </summary>
+    /// <remarks>Note that we should NOT use this class only but for supporting Legacy classes, and use the <see cref="Credentials.Credentials"/> class instead when possible</remarks>
     internal sealed class ConfigurerEditor : ExtensionConfigurerEditorBase
     {
         private ValidatingTextBox txtServerUrl;

@@ -12,6 +12,10 @@ using Inedo.BuildMaster.Extensibility;
 
 namespace Inedo.BuildMasterExtensions.TeamCity
 {
+    /// <summary>
+    /// Builds a SELECT html control filled with buildTypes
+    /// </summary>
+    /// <remarks>Uses the default Configuration Profile, not Resource Credentials</remarks>
     public class BuildConfigurationSelectList : SelectList
     {
         internal Action ExternalInit;
@@ -30,10 +34,11 @@ namespace Inedo.BuildMasterExtensions.TeamCity
 
         internal void FillItems(Configurer configurer)
         {
+            // TODO: Use Resource Credentials instead of Configuration Profile
             if (configurer == null)
                 return;
 
-            var teamCityAPI = configurer.GetAPI();
+            var teamCityAPI = new TeamCityAPI(configurer);
 
             var buildTypes = teamCityAPI.GetBuildTypes();
 

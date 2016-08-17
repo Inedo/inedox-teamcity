@@ -18,6 +18,11 @@ using System.Collections.Generic;
 
 namespace Inedo.BuildMasterExtensions.TeamCity
 {
+    /// <summary>
+    /// This class implements a Pipeline Importer which performs similar function as the ImportArtifactOperation available in Plans.
+    /// It uses the same manager class to implement this logic (<see cref="ImportArtifactOperationManager"/>) but does rely on LEGACY
+    /// Configuration profile (<see cref="Configurer"/>) to retrieve credentials for the API, it does *NOT* use Resource Credentials (<see cref="Credentials.Credentials"/>)
+    /// </summary>
     [DisplayName("TeamCity")]
     [Description("Imports artifacts from a build in TeamCity.")]
     [BuildImporterTemplate(typeof(BuildImporterTemplate))]
@@ -34,7 +39,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity
         public string BuildNumber { get; set; }
         [Persistent]
         public string BranchName { get; set; }
-        
+
         public IEnumerable<string> BranchNames2 { get; set; }
 
         string ICustomBuildNumberProvider.BuildNumber => GetActualBuildNumber(this.BuildNumber);
@@ -43,16 +48,27 @@ namespace Inedo.BuildMasterExtensions.TeamCity
 
         public override void Import(IBuildImporterContext context)
         {
+            // Grabs the default configuration profile (legacy)
             var configurer = this.GetExtensionConfigurer();
-            var importer = new ImportArtifactOperationManager(configurer, this, context)
+
+            // Builds an operation object as required by the manager (the legacy code abides by the modern code rules)
+            var op = new Operations.ImportArtifactOperation()
             {
+                ServerUrl = configurer.ServerUrl,
+                UserName = configurer.UserName,
+                Password = configurer.Password,
+
                 ArtifactName = this.ArtifactName,
                 BranchName = this.GetBranchName(configurer),
                 BuildConfigurationId = this.BuildConfigurationId,
                 BuildNumber = this.BuildNumber
             };
-            string teamCityBuildNumber = importer.ImportAsync().Result();
-            
+
+            // use the modern code to perform the task
+            var manager = new ImportArtifactOperationManager(op, context);
+
+            string teamCityBuildNumber = manager.ImportAsync().Result();
+
             this.LogDebug("TeamCity build number resolved to {0}, creating $TeamCityBuildNumber variable...", teamCityBuildNumber);
 
             DB.Variables_CreateOrUpdateVariableDefinition(

@@ -118,9 +118,9 @@
     <Compile Include="Connectivity\Credentials.cs" />
     <Compile Include="Controls\BuildConfigurationSelectList.cs" />
     <Compile Include="Controls\BuildNumberHiddenField.cs" />
-    <Compile Include="Operations\BuildConfigurationArgumentEditor.cs" />
+    <Compile Include="Operations\Editors\BuildConfigurationArgumentEditor.cs" />
+    <Compile Include="Operations\Editors\PasswordArgumentEditor.cs" />
     <Compile Include="Operations\ImportArtifact\ImportArtifactOperation.cs" />
-    <Compile Include="Operations\ImportArtifact\ImportArtifactOperationEditor.cs" />
     <Compile Include="Operations\ImportArtifact\ImportArtifactOperationManager.cs" />
     <Compile Include="Operations\QueueBuild\QueueBuildOperation.cs" />
     <Compile Include="Operations\QueueBuild\QueueBuildOperationManager.cs" />

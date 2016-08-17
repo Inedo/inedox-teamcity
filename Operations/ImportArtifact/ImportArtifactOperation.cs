@@ -11,11 +11,16 @@ using Inedo.BuildMaster.Web.Controls.Plans;
 using System.Reflection;
 using Inedo.Web.Controls;
 using Inedo.BuildMaster.Web;
+using System;
 
 namespace Inedo.BuildMasterExtensions.TeamCity.Operations
 {
 
-    
+    /// <summary>
+    /// This class defines a Plan operation which imports an artifact from TeamCity.
+    /// It uses the Resource Credentials via its base class <see cref="Operation"/>.
+    /// The work logic is performed in <see cref="ImportArtifactOperationManager"/>.
+    /// </summary>
     [DisplayName("Import Artifact from TeamCity")]
     [Description("Downloads an artifact from the specified TeamCity server and saves it to the artifact library.")]
     [ScriptAlias("Import-Artifact")]
@@ -49,13 +54,8 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
 
         public async override Task ExecuteAsync(IOperationExecutionContext context)
         {
-            var manager = new ImportArtifactOperationManager(this, this, context)
-            {
-                BuildConfigurationId = this.BuildConfigurationId,
-                BuildNumber = this.BuildNumber,
-                BranchName = this.BranchName,
-                ArtifactName = this.ArtifactName
-            };
+            // Note: here we are passing the connectionInfo data from the base class's Credentials (hence we are not using legacy Configuration Profiles)
+            var manager = new ImportArtifactOperationManager(this, context);
 
             string teamCityBuildNumber = await manager.ImportAsync().ConfigureAwait(false);
 
@@ -81,7 +81,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
         {
             string buildNumber = config[nameof(this.BuildNumber)];
-            string branchName = (string) config[nameof(this.BranchName)] ?? "default";
+            string branchName = config[nameof(this.BranchName)];
             string buildConfigurationId = config[nameof(this.BuildConfigurationId)];
 
             return new ExtendedRichDescription(
@@ -89,10 +89,11 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
 
                 new RichDescription(
                     "of build ", AH.ParseInt(buildNumber) != null ? "#" : "", new Hilite(buildNumber),
-                    " on branch ", new Hilite(branchName),
+                    " on branch ", new Hilite(string.IsNullOrEmpty(branchName) ? "default" : BranchName),
                     " of build configuration ", new Hilite(buildConfigurationId)
                 )
             );
         }
     }
+
 }

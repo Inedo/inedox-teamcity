@@ -13,6 +13,11 @@ using Inedo.Serialization;
 
 namespace Inedo.BuildMasterExtensions.TeamCity.Credentials
 {
+    /// <summary>
+    /// This class provides the UI building logic to enter connection details as Resource Credential 
+    /// in replacement for legacy configuration profiles.
+    /// Web : /administration/credentials
+    /// </summary>
     [ScriptAlias("TeamCity")]
     [DisplayName("TeamCity")]
     [Description("Credentials for TeamCity.")]
@@ -37,5 +42,6 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Credentials
         {
             return new RichDescription(string.IsNullOrEmpty(this.UserName) ? "Guest" : this.UserName);
         }
+
     }
 }

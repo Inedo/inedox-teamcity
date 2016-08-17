@@ -9,6 +9,11 @@ using Inedo.Serialization;
 
 namespace Inedo.BuildMasterExtensions.TeamCity
 {
+    /// <summary>
+    /// This class implements ??? performs similar function as the QueueBuildOperation available in Plans.
+    /// It uses the same manager class to implement this logic (<see cref="QueueBuildOperationManager"/>) but does rely on LEGACY
+    /// Configuration profile (<see cref="Configurer"/>) to retrieve credentials for the API, it does *NOT* use Resource Credentials (<see cref="Credentials.Credentials"/>)
+    /// </summary>
     [DisplayName("Trigger TeamCity Build")]
     [Description("Triggers a build in TeamCity using the specified build configuration ID.")]
     [CustomEditor(typeof(TriggerBuildActionEditor))]
@@ -36,18 +41,25 @@ namespace Inedo.BuildMasterExtensions.TeamCity
 
         protected override void Execute()
         {
+            // Grabs the default configuration profile (legacy)
             var configurer = this.GetExtensionConfigurer();
-            string branch = this.GetBranchName(configurer);
 
-            var queuer = new QueueBuildOperationManager(configurer, (ILogger)this, (IGenericBuildMasterContext)this.Context)
+            // Builds an operation object as required by the manager (the legacy code abides by the modern code rules)
+            var op = new Operations.QueueBuildOperation()
             {
+                ServerUrl = configurer.ServerUrl,
+                UserName = configurer.UserName,
+                Password = configurer.Password,
+
+                BranchName = this.GetBranchName(configurer),
                 BuildConfigurationId = this.BuildConfigurationId,
-                //AdditionalParameters = this.AdditionalParameters,
-                WaitForCompletion = this.WaitForCompletion, 
-                BranchName = branch
+                WaitForCompletion = this.WaitForCompletion
             };
 
-            queuer.QueueBuildAsync(CancellationToken.None, logProgressToExecutionLog: true).WaitAndUnwrapExceptions();
+            // use the modern code to perform the task
+            var manager = new QueueBuildOperationManager(op, (IGenericBuildMasterContext)this.Context); ;
+
+            manager.QueueBuildAsync(CancellationToken.None, logProgressToExecutionLog: true).WaitAndUnwrapExceptions();
         }
 
         private string GetBranchName(Configurer configurer)
