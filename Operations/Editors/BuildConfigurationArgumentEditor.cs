@@ -26,15 +26,13 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
             var ddlConfiguration = new BuildConfigurationSelectList();
             var configurer = Configurer.GetConfigurer(); // Uses default one...horrible...
 
-            // TODO: Use Resource Credentials if possible or implement client-side population of the dropdown using KO
-
-            Type operationType = this.Property.DeclaringType;
-            
+            // TODO: Use Resource Credentials if possible or implement client-side population of the dropdown using KO            
             ddlConfiguration.FillItems(configurer);
 
             ddlConfiguration.Attributes["data-bind"] = string.Format("planargvalue: {0}", base.Property.Name, "BuildConfigurationId");
 
             return ddlConfiguration;
+
         }
         
     }

@@ -23,7 +23,10 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
 
         protected override ISimpleControl BuildEditorHtml()
         {
-            return new Inedo.Web.Controls.PasswordTextBox();
+            Element element = new Element("input", new ElementAttribute("type", "password"));
+            element.Attributes["data-bind"] = string.Format("planargvalue: {0}", base.Property.Name, "Password");
+            return element;
+            // return new Inedo.Web.Controls.PasswordTextBox();
         }
         
     }

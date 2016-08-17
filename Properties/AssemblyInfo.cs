@@ -10,8 +10,8 @@ using Inedo.BuildMaster.Extensibility;
 [assembly: AssemblyCompany("Inedo, LLC")]
 [assembly: AssemblyProduct("BuildMaster")]
 [assembly: AssemblyCopyright("Copyright © 2008 - 2016")]
-[assembly: AssemblyVersion("0.0.0.0")]
-[assembly: AssemblyFileVersion("0.0")]
+[assembly: AssemblyVersion("5.2.*")]
+[assembly: AssemblyFileVersion("5.2")]
 [assembly: CLSCompliant(false)]
 [assembly: RequiredBuildMasterVersion("5.0.0")]
 
