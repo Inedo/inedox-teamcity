@@ -34,10 +34,14 @@ namespace Inedo.BuildMasterExtensions.TeamCity
 
         internal void FillItems(Configurer configurer)
         {
-            // TODO: Use Resource Credentials instead of Configuration Profile
-            if (configurer == null)
-                return;
+            // TODO: Use Resource Credentials instead of Configuration Profiles
 
+            if (configurer == null)
+                configurer = Configurer.GetConfigurer(); // get the default configuration profile
+
+            if (configurer == null) // if still null, well we can't do much....
+                return;
+            
             var teamCityAPI = new TeamCityAPI(configurer);
 
             var buildTypes = teamCityAPI.GetBuildTypes();

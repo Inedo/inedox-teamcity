@@ -45,7 +45,6 @@ namespace Inedo.BuildMasterExtensions.TeamCity
             this.Operation.LogInformation($"Queueing build in TeamCity...");
             TeamCityBuildType buildType = null;
 
-            //buildType = this.teamCityAPI.GetBuildTypeByName(this.ProjectName, this.BuildConfigurationName); // will raise an error if not found
             buildType = this.Operation.api.GetBuildType(this.Operation.BuildConfigurationId); // will raise an error if not found
 
             TeamCityBuild build = new TeamCityBuild();
@@ -56,7 +55,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity
                 this.Operation.LogDebug("Triggering TeamCity build configuration id {0}", buildType.id);
 
                 client.Headers[System.Net.HttpRequestHeader.ContentType] = "application/xml";
-                xml = client.UploadString("app/rest/buildQueue", $"<build><buildType id=\"{buildType.id}\" /></build>"); // We WANT synchronous call for this one !
+                xml = client.UploadString("app/rest/buildQueue", $"<build  branchName=\"{this.Operation.BranchName}\"><buildType id=\"{buildType.id}\" /></build>"); // We WANT synchronous call for this one !
                 build.Update(xml);
 
                 // record build details
