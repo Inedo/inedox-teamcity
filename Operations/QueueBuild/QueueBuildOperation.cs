@@ -28,7 +28,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
         [CustomEditor(typeof(BuildConfigurationArgumentEditor))]
         public string BuildConfigurationId { get; set; }
 
-        [ScriptAlias("Branch")]
+        [ScriptAlias("BranchName")]
         [DisplayName("Branch name")]
         [PlaceholderText("Default")]
         public string BranchName { get; set; }
@@ -51,7 +51,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
         {
             // Note: here we are passing the connectionInfo data from the base class's Credentials (hence we are not using legacy Configuration Profiles)
             this.manager = new QueueBuildOperationManager(this, context);
-
+           
             return this.manager.QueueBuildAsync(context.CancellationToken, logProgressToExecutionLog: true);
         }
 
@@ -63,12 +63,14 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
         {
             string branchName = config[nameof(this.BranchName)];
+            branchName = string.IsNullOrEmpty(branchName) ? "default" : branchName;
+
             string buildConfigurationId = config[nameof(this.BuildConfigurationId)];
 
             return new ExtendedRichDescription(
                 new RichDescription("Queue TeamCity Build"),
                 new RichDescription(
-                    " on branch ", new Hilite(string.IsNullOrEmpty(branchName) ? "default" : BranchName),
+                    " on branch ", new Hilite(branchName),
                     " of build configuration ", new Hilite(buildConfigurationId)
                 )
             );

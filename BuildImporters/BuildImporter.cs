@@ -67,25 +67,8 @@ namespace Inedo.BuildMasterExtensions.TeamCity
             // use the modern code to perform the task
             var manager = new ImportArtifactOperationManager(op, context);
 
-            string teamCityBuildNumber = manager.ImportAsync().Result();
-
-            this.LogDebug("TeamCity build number resolved to {0}, creating $TeamCityBuildNumber variable...", teamCityBuildNumber);
-
-            DB.Variables_CreateOrUpdateVariableDefinition(
-                "TeamCityBuildNumber",
-                Application_Id: context.ApplicationId,
-                Release_Number: context.ReleaseNumber,
-                Build_Number: context.BuildNumber,
-                Value_Text: teamCityBuildNumber,
-                Sensitive_Indicator: false,
-                Environment_Id: null,
-                ServerRole_Id: null,
-                Server_Id: null,
-                ApplicationGroup_Id: null,
-                Execution_Id: null,
-                Promotion_Id: null,
-                Deployable_Id: null
-            );
+            manager.ImportAsync().ConfigureAwait(false);
+            
         }
 
         private string GetActualBuildNumber(string buildNumber)

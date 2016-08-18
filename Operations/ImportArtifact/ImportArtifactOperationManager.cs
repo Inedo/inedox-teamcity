@@ -13,6 +13,7 @@ using Inedo.Diagnostics;
 using Inedo.ExecutionEngine.Executer;
 using Inedo.IO;
 using Inedo.BuildMasterExtensions.TeamCity.Operations;
+using Inedo.BuildMaster.Data;
 
 namespace Inedo.BuildMasterExtensions.TeamCity
 {
@@ -34,12 +35,10 @@ namespace Inedo.BuildMasterExtensions.TeamCity
             this.Context = context;
         }
 
-        public async Task<string> ImportAsync()
+        public async Task ImportAsync()
         {
-            this.Operation.LogInformation($"Importing artifact \"{this.Operation.ArtifactName}\" from TeamCity...");
-
             TeamCityBuildType buildType = null;
-            
+
             buildType = this.Operation.api.GetBuildType(this.Operation.BuildConfigurationId); // will raise an error if not found
 
             if (string.IsNullOrEmpty(this.Operation.BuildNumber))
@@ -58,7 +57,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity
                 if (!string.IsNullOrEmpty(this.Operation.ArtifactName) && (string.Compare(key, this.Operation.ArtifactName, true) == 0))
                     artifacts.Remove(key);
 
-                if (! key.ToLower().EndsWith(".zip")) // BM does not understand non-zip artifacts...sigh...
+                if (!key.ToLower().EndsWith(".zip")) // BM does not understand non-zip artifacts...sigh...
                     artifacts.Remove(key);
 
             }
@@ -101,7 +100,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity
                             this.Context.ReleaseNumber,
                             this.Context.BuildNumber,
                             this.Context.DeployableId,
-                            TrimWhitespaceAndZipExtension(artifact.Key)
+                            artifact.Key // TrimWhitespaceAndZipExtension(artifact.Key)
                         ),
                         Util.Agents.CreateLocalAgent().GetService<IFileOperationsExecuter>(),
                         new FileEntryInfo(artifact.Key, tempFile)
@@ -118,13 +117,54 @@ namespace Inedo.BuildMasterExtensions.TeamCity
                     }
                 }
 
-               
+
             }
-            
-            return build.number;
+
+            this.Operation.LogInformation($"Creating $TeamCityBuildNumber variable with value {build.number}");
+
+            // Creates TeamCityBuildNumber package variable
+            await new DB.Context(false).Variables_CreateOrUpdateVariableDefinitionAsync(
+                "TeamCityBuildNumber",
+                Application_Id: this.Context.ApplicationId,
+                Release_Number: this.Context.ReleaseNumber,
+                Build_Number: this.Context.BuildNumber,
+                Value_Text: build.number,
+                Sensitive_Indicator: false,
+                Environment_Id: null,
+                ServerRole_Id: null,
+                Server_Id: null,
+                ApplicationGroup_Id: null,
+                Execution_Id: null,
+                Promotion_Id: null,
+                Deployable_Id: null
+            ).ConfigureAwait(false);
+
+            var firstArtifactName = "";
+            if (artifacts.Count() > 0)
+                firstArtifactName = artifacts.First().Key;
+
+            this.Operation.LogInformation($"Creating TeamCityArtifactName variable with value {firstArtifactName}");
+
+            // Creates TeamCityPackageName package variable
+            await new DB.Context(false).Variables_CreateOrUpdateVariableDefinitionAsync(
+                "TeamCityArtifactName",
+                Application_Id: this.Context.ApplicationId,
+                Release_Number: this.Context.ReleaseNumber,
+                Build_Number: this.Context.BuildNumber,
+                Value_Text: firstArtifactName, // well, yeah... BM seems to take only a single artifact ? anyway we'll retain the name of the first in the list
+                Sensitive_Indicator: false,
+                Environment_Id: null,
+                ServerRole_Id: null,
+                Server_Id: null,
+                ApplicationGroup_Id: null,
+                Execution_Id: null,
+                Promotion_Id: null,
+                Deployable_Id: null
+            ).ConfigureAwait(false);
+
         }
 
-     
+
 
         private static string TrimWhitespaceAndZipExtension(string artifactName)
         {

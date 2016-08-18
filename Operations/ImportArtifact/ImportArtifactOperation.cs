@@ -42,7 +42,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
         [Description("The build number may be a specific build number, or a special value such as \"lastSuccessful\", \"lastFinished\", or \"lastPinned\".")]
         public string BuildNumber { get; set; }
 
-        [ScriptAlias("Branch")]
+        [ScriptAlias("BranchName")]
         [DisplayName("Branch name")]
         [PlaceholderText("Default")]
         public string BranchName { get; set; }
@@ -57,39 +57,28 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
             // Note: here we are passing the connectionInfo data from the base class's Credentials (hence we are not using legacy Configuration Profiles)
             var manager = new ImportArtifactOperationManager(this, context);
 
-            string teamCityBuildNumber = await manager.ImportAsync().ConfigureAwait(false);
+            await manager.ImportAsync().ConfigureAwait(false);
 
-            this.LogDebug("TeamCity build number resolved to {0}, creating $TeamCityBuildNumber variable...", teamCityBuildNumber);
-
-            await new DB.Context(false).Variables_CreateOrUpdateVariableDefinitionAsync(
-                "TeamCityBuildNumber",
-                Application_Id: context.ApplicationId,
-                Release_Number: context.ReleaseNumber,
-                Build_Number: context.BuildNumber,
-                Value_Text: teamCityBuildNumber,
-                Sensitive_Indicator: false,
-                Environment_Id: null,
-                ServerRole_Id: null,
-                Server_Id: null,
-                ApplicationGroup_Id: null,
-                Execution_Id: null,
-                Promotion_Id: null,
-                Deployable_Id: null
-            ).ConfigureAwait(false);
         }
 
         protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
         {
             string buildNumber = config[nameof(this.BuildNumber)];
+
             string branchName = config[nameof(this.BranchName)];
+            branchName = string.IsNullOrEmpty(branchName) ? "default" : branchName;
+
             string buildConfigurationId = config[nameof(this.BuildConfigurationId)];
 
+            string artifactName = config[nameof(this.ArtifactName)];
+            artifactName = string.IsNullOrEmpty(artifactName) ? "" : $"'{artifactName}'";
+
             return new ExtendedRichDescription(
-                new RichDescription("Import TeamCity ", new Hilite(config[nameof(this.ArtifactName)]), " Artifact "),
+                new RichDescription("Import Artifact from TeamCity ", new Hilite(artifactName)),
 
                 new RichDescription(
-                    "of build ", AH.ParseInt(buildNumber) != null ? "#" : "", new Hilite(buildNumber),
-                    " on branch ", new Hilite(string.IsNullOrEmpty(branchName) ? "default" : BranchName),
+                    " of build ", AH.ParseInt(buildNumber) != null ? "#" : "", new Hilite(buildNumber),
+                    " on branch ", new Hilite(branchName),
                     " of build configuration ", new Hilite(buildConfigurationId)
                 )
             );

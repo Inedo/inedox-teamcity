@@ -9,6 +9,7 @@ using Inedo.BuildMaster.Extensibility.Operations;
 using Inedo.Diagnostics;
 using Inedo.ExecutionEngine.Executer;
 using Inedo.BuildMasterExtensions.TeamCity.Operations;
+using Inedo.BuildMaster.Data;
 
 namespace Inedo.BuildMasterExtensions.TeamCity
 {
@@ -42,10 +43,11 @@ namespace Inedo.BuildMasterExtensions.TeamCity
 
         public async Task QueueBuildAsync(CancellationToken cancellationToken, bool logProgressToExecutionLog = true)
         {
-            this.Operation.LogInformation($"Queueing build in TeamCity...");
             TeamCityBuildType buildType = null;
 
             buildType = this.Operation.api.GetBuildType(this.Operation.BuildConfigurationId); // will raise an error if not found
+
+            this.Operation.LogInformation($"Retrieving Build Information for {buildType.id}...");
 
             TeamCityBuild build = new TeamCityBuild();
             string xml;
@@ -61,9 +63,13 @@ namespace Inedo.BuildMasterExtensions.TeamCity
                 // record build details
 
                 this.Operation.LogInformation($"Building of build configuration {buildType.id} was triggered successfully. For reference Build ID is {build.id}.");
+                this.Operation.LogInformation("TeamCity is currently building...");
 
                 if (!this.Operation.WaitForCompletion)
+                {
+                    this.Operation.LogInformation("WaitForCompletion is set to false in the plan, so we will not wait for TeamCity to finish build and will continue our business...");
                     return;
+                }
 
                 // Loop until the build is complete
                 string prevStatusText = "";
@@ -80,7 +86,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity
                     if (logProgressToExecutionLog)
                     {
                         if (prevStatusText != build.statusText)
-                            this.Operation.LogInformation($"{this.progressMessage} : {build.statusText}");
+                            this.Operation.LogDebug($"{this.progressMessage} : {build.statusText}");
 
                         prevStatusText = build.statusText;
 
@@ -88,13 +94,31 @@ namespace Inedo.BuildMasterExtensions.TeamCity
                         //    this.Operation.LogInformation(build.statusText);
 
                         if (build.waitReason.Length != 0)
-                            this.Operation.LogInformation($"Waiting for Teamcity... Reason: {build.waitReason}");
+                            this.Operation.LogDebug($"Waiting for Teamcity... Reason: {build.waitReason}");
                     }
 
                 } while (build.running || build.status == TeamCityBuild.BuildStatuses.Unknown);
 
                 this.Operation.LogInformation($"{build.projectName} build #{build.number} : {build.statusText}");
 
+                this.Operation.LogInformation($"Creating $TeamCityBuildNumber variable with value {build.number}");
+
+                // Creates TeamCityBuildNumber package variable
+                await new DB.Context(false).Variables_CreateOrUpdateVariableDefinitionAsync(
+                    "TeamCityBuildNumber",
+                    Application_Id: this.Context.ApplicationId,
+                    Release_Number: this.Context.ReleaseNumber,
+                    Build_Number: this.Context.BuildNumber,
+                    Value_Text: build.number,
+                    Sensitive_Indicator: false,
+                    Environment_Id: null,
+                    ServerRole_Id: null,
+                    Server_Id: null,
+                    ApplicationGroup_Id: null,
+                    Execution_Id: null,
+                    Promotion_Id: null,
+                    Deployable_Id: null
+                ).ConfigureAwait(false);
             }
         }
         

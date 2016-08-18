@@ -107,15 +107,15 @@
     <Compile Include="BuildImporters\BuildImporterTemplateEditor.cs">
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
-    <Compile Include="Connectivity\Configurer.cs" />
-    <Compile Include="Connectivity\ConfigurerEditor.cs">
+    <Compile Include="Connectivity\ConfigurationProfiles\Configurer.cs" />
+    <Compile Include="Connectivity\ConfigurationProfiles\ConfigurerEditor.cs">
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="Connectivity\IConnectionInfo.cs" />
     <Compile Include="Connectivity\WebClient.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Connectivity\Credentials.cs" />
+    <Compile Include="Connectivity\Credentials\Credentials.cs" />
     <Compile Include="Controls\BuildConfigurationSelectList.cs" />
     <Compile Include="Controls\BuildNumberHiddenField.cs" />
     <Compile Include="Operations\Editors\BuildConfigurationArgumentEditor.cs" />
