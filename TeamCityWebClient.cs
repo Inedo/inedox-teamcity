@@ -40,6 +40,29 @@ namespace Inedo.BuildMasterExtensions.TeamCity
                 .Select(e => (string)e.Attribute("name"))
                 .ToList();
         }
+        public async Task<IList<string>> GetQualifiedProjectNamesAsync()
+        {
+            var xdoc = await this.DownloadXDocumentAsync("app/rest/projects").ConfigureAwait(false);
+
+            var projects = xdoc.Element("projects").Elements("project");
+
+            return projects.Select(p => GetQualifiedProjectName(projects, p.Attribute("parentProjectId"), (string)p.Attribute("name"))).ToList();
+        }
+        private static string GetQualifiedProjectName(IEnumerable<XElement> projects, XAttribute parentId, string name)
+        {
+            if (parentId == null)
+                return name;
+
+            var parent = projects.FirstOrDefault(p => p.Attribute("id")?.Value == parentId.Value);
+            if (parent == null)
+                return name;
+
+            var parentParentId = parent.Attribute("parentProjectId");
+            if (parentParentId == null) // Don't put <Root project> before all project names.
+                return name;
+
+            return GetQualifiedProjectName(projects, parentParentId, parent.Attribute("name").Value + " :: " + name);
+        }
         public async Task<IList<string>> GetBuildTypeNamesAsync(string projectName)
         {
             var xdoc = await this.DownloadXDocumentAsync("app/rest/buildTypes").ConfigureAwait(false);

@@ -19,7 +19,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity
             var credentials = ResourceCredentials.Create<TeamCityCredentials>(credentialName);
             using (var client = new TeamCityWebClient(credentials))
             {
-                return await client.GetProjectNamesAsync().ConfigureAwait(false);
+                return await client.GetQualifiedProjectNamesAsync().ConfigureAwait(false);
             }
         }
     }
