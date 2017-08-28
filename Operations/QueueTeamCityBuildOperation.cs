@@ -37,6 +37,11 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
         [PlaceholderText("Default")]
         public string BranchName { get; set; }
 
+        [ScriptAlias("BuildConfigurationId")]
+        [DisplayName("Build configuration ID")]
+        [Description("TeamCity identifier that targets a single build configuration. May be specified instead of the Project name and Build configuration name.")]
+        public string BuildConfigurationId { get; set; }
+
         [Category("Advanced")]
         [ScriptAlias("AdditionalParameters")]
         [DisplayName("Additional parameters")]
@@ -55,6 +60,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
             this.buildQueuer = new TeamCityBuildQueuer((ITeamCityConnectionInfo)this, (ILogger)this, context)
             {
                 ProjectName = this.ProjectName,
+                BuildConfigurationId = this.BuildConfigurationId,
                 BuildConfigurationName = this.BuildConfigurationName,
                 AdditionalParameters = this.AdditionalParameters,
                 WaitForCompletion = this.WaitForCompletion,
