@@ -181,7 +181,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity
                                               BuildType = buildType,
                                               Index = Array.FindIndex(buildType.ProjectNameParts, p => string.Equals(p, this.ProjectName, StringComparison.OrdinalIgnoreCase))
                                           }
-                                          where match.Index > -1
+                                          where match.Index > -1 || string.Equals(match.BuildType.ProjectName, this.ProjectName, StringComparison.OrdinalIgnoreCase)
                                           orderby match.Index
                                           select match.BuildType.BuildConfigurationId;
                 
