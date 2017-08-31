@@ -154,13 +154,13 @@ namespace Inedo.BuildMasterExtensions.TeamCity
         private string TryGetPredefinedConstantBuildNumberApiUrl(string buildNumber)
         {
             if (string.Equals(buildNumber, "lastSuccessful", StringComparison.OrdinalIgnoreCase))
-                return string.Format("app/rest/builds/buildType:{0},running:false,status:success,count:1", Uri.EscapeDataString(this.BuildConfigurationId));
+                return string.Format("app/rest/builds/?locator=buildType:{0},running:false,status:success,count:1", Uri.EscapeDataString(this.BuildConfigurationId));
 
             if (string.Equals(buildNumber, "lastPinned", StringComparison.OrdinalIgnoreCase))
-                return string.Format("app/rest/builds/buildType:{0},running:false,pinned:true,count:1", Uri.EscapeDataString(this.BuildConfigurationId));
+                return string.Format("app/rest/builds/?locator=buildType:{0},running:false,pinned:true,count:1", Uri.EscapeDataString(this.BuildConfigurationId));
 
             if (string.Equals(buildNumber, "lastFinished", StringComparison.OrdinalIgnoreCase))
-                return string.Format("app/rest/builds/buildType:{0},running:false,count:1", Uri.EscapeDataString(this.BuildConfigurationId));
+                return string.Format("app/rest/builds/?locator=buildType:{0},running:false,count:1", Uri.EscapeDataString(this.BuildConfigurationId));
 
             return null;
         }
