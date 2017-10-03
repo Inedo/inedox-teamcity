@@ -141,7 +141,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity
                 {
                     string xml = await client.DownloadStringTaskAsync(apiUrl).ConfigureAwait(false);
                     var doc = XDocument.Parse(xml);
-                    return doc.Element("build").Attribute("number").Value;
+                    return doc.Element("builds").Element("build").Attribute("number").Value;
                 }
             }
             catch (Exception ex)

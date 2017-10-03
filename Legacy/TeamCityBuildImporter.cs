@@ -91,7 +91,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity
                 {
                     string xml = client.DownloadString(apiUrl);
                     var doc = XDocument.Parse(xml);
-                    return doc.Element("build").Attribute("number").Value;
+                    return doc.Element("builds").Element("build").Attribute("number").Value;
                 }
             }
             catch (Exception ex)
