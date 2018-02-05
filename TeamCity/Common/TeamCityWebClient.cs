@@ -5,7 +5,7 @@ using System.Net;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace Inedo.BuildMasterExtensions.TeamCity
+namespace Inedo.Extensions.TeamCity
 {
     internal sealed class TeamCityWebClient : WebClient
     {

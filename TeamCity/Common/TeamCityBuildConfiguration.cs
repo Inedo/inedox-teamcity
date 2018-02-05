@@ -1,4 +1,4 @@
-﻿namespace Inedo.BuildMasterExtensions.TeamCity
+﻿namespace Inedo.Extensions.TeamCity
 {
     public class TeamCityBuildConfiguration
     {

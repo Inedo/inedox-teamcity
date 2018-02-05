@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using Inedo.BuildMaster.Data;
 using Inedo.BuildMaster.Extensibility.BuildImporters;
 using Inedo.Diagnostics;
+using Inedo.Extensions.TeamCity;
 using Inedo.Serialization;
 using Inedo.Web;
 

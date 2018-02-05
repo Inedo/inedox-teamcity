@@ -7,7 +7,7 @@ using Inedo.Diagnostics;
 using Inedo.ExecutionEngine.Executer;
 using Inedo.Extensibility.Operations;
 
-namespace Inedo.BuildMasterExtensions.TeamCity
+namespace Inedo.Extensions.TeamCity
 {
     internal sealed class TeamCityBuildQueuer
     {
@@ -26,7 +26,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity
 
 #if BuildMaster
         public TeamCityBuildQueuer(ITeamCityConnectionInfo connectionInfo, ILogger logger)
-            : this(connectionInfo, ShimLogger.Create(logger))
+            : this(connectionInfo, BuildMasterExtensions.TeamCity.ShimLogger.Create(logger))
         {
         }
 #endif

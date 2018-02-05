@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading.Tasks;
-using Inedo.BuildMasterExtensions.TeamCity.Credentials;
+using Inedo.Extensions.TeamCity.Credentials;
 using Inedo.Documentation;
 using Inedo.Extensibility.Credentials;
 using Inedo.Extensibility.ListVariableSources;
 using Inedo.Serialization;
 
-namespace Inedo.BuildMasterExtensions.TeamCity.ListVariableSources
+namespace Inedo.Extensions.TeamCity.ListVariableSources
 {
     [DisplayName("TeamCity Project Name")]
     [Description("Project names from a specified TeamCity instance.")]

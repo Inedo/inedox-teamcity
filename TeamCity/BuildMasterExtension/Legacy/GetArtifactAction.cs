@@ -4,6 +4,7 @@ using System.IO;
 using Inedo.Agents;
 using Inedo.BuildMaster;
 using Inedo.Documentation;
+using Inedo.Extensions.TeamCity;
 using Inedo.Serialization;
 using Inedo.Web;
 

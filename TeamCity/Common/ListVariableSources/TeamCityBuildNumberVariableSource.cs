@@ -1,14 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading.Tasks;
-using Inedo.BuildMasterExtensions.TeamCity.Credentials;
+using Inedo.Extensions.TeamCity.Credentials;
 using Inedo.Documentation;
 using Inedo.Extensibility.Credentials;
 using Inedo.Extensibility.ListVariableSources;
 using Inedo.Serialization;
 using Inedo.Web;
+using Inedo.Extensions.TeamCity.SuggestionProviders;
 
-namespace Inedo.BuildMasterExtensions.TeamCity.ListVariableSources
+namespace Inedo.Extensions.TeamCity.ListVariableSources
 {
     [DisplayName("TeamCity Build Number")]
     [Description("Build numbers from a specified build configuration in a TeamCity instance.")]

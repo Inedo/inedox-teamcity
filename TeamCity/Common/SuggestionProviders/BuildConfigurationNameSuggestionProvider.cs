@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Inedo.BuildMasterExtensions.TeamCity.Credentials;
+using Inedo.Extensions.TeamCity.Credentials;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Credentials;
 using Inedo.Web;
 
-namespace Inedo.BuildMasterExtensions.TeamCity
+namespace Inedo.Extensions.TeamCity.SuggestionProviders
 {
     internal class BuildConfigurationNameSuggestionProvider : ISuggestionProvider
     {

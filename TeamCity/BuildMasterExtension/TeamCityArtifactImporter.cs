@@ -8,6 +8,7 @@ using Inedo.BuildMaster.Artifacts;
 using Inedo.BuildMaster.Extensibility;
 using Inedo.Diagnostics;
 using Inedo.ExecutionEngine.Executer;
+using Inedo.Extensions.TeamCity;
 using Inedo.IO;
 
 namespace Inedo.BuildMasterExtensions.TeamCity

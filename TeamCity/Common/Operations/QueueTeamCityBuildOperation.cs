@@ -4,9 +4,10 @@ using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Operations;
+using Inedo.Extensions.TeamCity.SuggestionProviders;
 using Inedo.Web;
 
-namespace Inedo.BuildMasterExtensions.TeamCity.Operations
+namespace Inedo.Extensions.TeamCity.Operations
 {
     [DisplayName("Queue TeamCity Build")]
     [Description("Queues a build in TeamCity, optionally waiting for its completion.")]

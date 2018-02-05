@@ -1,11 +1,11 @@
 ﻿using System.ComponentModel;
-using Inedo.BuildMasterExtensions.TeamCity.Credentials;
+using Inedo.Extensions.TeamCity.Credentials;
 using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Credentials;
 using Inedo.Extensibility.Operations;
 
-namespace Inedo.BuildMasterExtensions.TeamCity.Operations
+namespace Inedo.Extensions.TeamCity.Operations
 {
     public abstract class TeamCityOperation : ExecuteOperation, IHasCredentials<TeamCityCredentials>, ITeamCityConnectionInfo
     {

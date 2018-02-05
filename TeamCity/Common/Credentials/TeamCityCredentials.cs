@@ -7,7 +7,7 @@ using Inedo.Extensibility.Credentials;
 using Inedo.Serialization;
 using Inedo.Web;
 
-namespace Inedo.BuildMasterExtensions.TeamCity.Credentials
+namespace Inedo.Extensions.TeamCity.Credentials
 {
     [ScriptAlias("TeamCity")]
     [DisplayName("TeamCity")]

@@ -7,6 +7,9 @@ using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Operations;
+using Inedo.Extensions.TeamCity;
+using Inedo.Extensions.TeamCity.Operations;
+using Inedo.Extensions.TeamCity.SuggestionProviders;
 using Inedo.Web;
 
 namespace Inedo.BuildMasterExtensions.TeamCity.Operations

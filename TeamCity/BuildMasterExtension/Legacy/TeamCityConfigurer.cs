@@ -2,6 +2,7 @@
 using System.Linq;
 using Inedo.BuildMaster.Data;
 using Inedo.BuildMaster.Extensibility.Configurers.Extension;
+using Inedo.Extensions.TeamCity;
 using Inedo.Serialization;
 using Inedo.Web;
 

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Inedo.BuildMasterExtensions.TeamCity
+namespace Inedo.Extensions.TeamCity
 {
     internal interface ITeamCityConnectionInfo
     {

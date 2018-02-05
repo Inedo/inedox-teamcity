@@ -1,10 +1,9 @@
 ﻿using System.ComponentModel;
 using System.Threading;
 using Inedo.BuildMaster;
-using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Web;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
+using Inedo.Extensions.TeamCity;
 using Inedo.Serialization;
 using Inedo.Web;
 
@@ -40,7 +39,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity
             var configurer = this.GetExtensionConfigurer();
             string branch = this.GetBranchName(configurer);
 
-            var queuer = new TeamCityBuildQueuer(configurer, (ILogger)this)
+            var queuer = new TeamCityBuildQueuer(configurer, this)
             {
                 BuildConfigurationId = this.BuildConfigurationId,
                 AdditionalParameters = this.AdditionalParameters,
