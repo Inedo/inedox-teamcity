@@ -80,12 +80,9 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BuildNumberSuggestionProvider.cs" />
     <Compile Include="Legacy\BuildNumberPicker.cs" />
-    <Compile Include="ITeamCityConnectionInfo.cs" />
-    <Compile Include="BuildConfigurationNameSuggestionProvider.cs" />
     <Compile Include="Legacy\ShimLogger.cs" />
-    <Compile Include="ProjectNameSuggestionProvider.cs" />
+    <Compile Include="Operations\ImportTeamCityArtifactOperation.cs" />
     <Compile Include="Legacy\SelectBuildConfigurationPicker.cs" />
     <Compile Include="Legacy\GetArtifactAction.cs" />
     <Compile Include="Legacy\GetArtifactActionEditor.cs">
@@ -104,14 +101,9 @@
     <Compile Include="Legacy\TeamCityBuildImporterTemplateEditor.cs">
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
-    <Compile Include="TeamCityBuildConfiguration.cs" />
-    <Compile Include="TeamCityBuildQueuer.cs" />
     <Compile Include="Legacy\TeamCityConfigurer.cs" />
     <Compile Include="Legacy\TeamCityConfigurerEditor.cs">
       <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="TeamCityWebClient.cs">
-      <SubType>Component</SubType>
     </Compile>
     <Compile Include="Legacy\TriggerBuildAction.cs" />
     <Compile Include="Legacy\TriggerBuildActionEditor.cs">

@@ -10,11 +10,19 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Credentials\TeamCityCredentials.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ITeamCityConnectionInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ListVariableSources\TeamCityBuildConfigurationVariableSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ListVariableSources\TeamCityBuildNumberVariableSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ListVariableSources\TeamCityProjectNameVariableSource.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Operations\ImportTeamCityArtifactOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\QueueTeamCityBuildOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Operations\TeamCityOperation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SuggestionProviders\BuildConfigurationNameSuggestionProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SuggestionProviders\BuildNumberSuggestionProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SuggestionProviders\ProjectNameSuggestionProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TeamCityBuildConfiguration.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TeamCityBuildQueuer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TeamCityWebClient.cs">
+      <SubType>Component</SubType>
+    </Compile>
   </ItemGroup>
 </Project>

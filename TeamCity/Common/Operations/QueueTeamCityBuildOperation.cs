@@ -1,9 +1,5 @@
 ﻿using System.ComponentModel;
 using System.Threading.Tasks;
-using Inedo.BuildMaster;
-using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Extensibility.Operations;
-using Inedo.BuildMaster.Web.Controls;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility;
@@ -15,8 +11,6 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
     [DisplayName("Queue TeamCity Build")]
     [Description("Queues a build in TeamCity, optionally waiting for its completion.")]
     [ScriptAlias("Queue-Build")]
-    [Tag(Tags.Builds)]
-    [Tag("teamcity")]
     public sealed class QueueTeamCityBuildOperation : TeamCityOperation
     {
         private TeamCityBuildQueuer buildQueuer;
