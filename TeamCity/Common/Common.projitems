@@ -9,5 +9,12 @@
     <Import_RootNamespace>Inedo.Extensions.TeamCity</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Credentials\TeamCityCredentials.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ListVariableSources\TeamCityBuildConfigurationVariableSource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ListVariableSources\TeamCityBuildNumberVariableSource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ListVariableSources\TeamCityProjectNameVariableSource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Operations\ImportTeamCityArtifactOperation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Operations\QueueTeamCityBuildOperation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Operations\TeamCityOperation.cs" />
   </ItemGroup>
 </Project>

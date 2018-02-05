@@ -3,10 +3,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Extensibility.Operations;
 using Inedo.Diagnostics;
 using Inedo.ExecutionEngine.Executer;
+using Inedo.Extensibility.Operations;
 
 namespace Inedo.BuildMasterExtensions.TeamCity
 {
@@ -23,19 +22,19 @@ namespace Inedo.BuildMasterExtensions.TeamCity
         public string AdditionalParameters { get; set; }
 
         public ITeamCityConnectionInfo ConnectionInfo { get; }
-        public ILogger Logger { get; }
-        public IGenericBuildMasterContext Context { get; }
+        public ILogSink Logger { get; }
 
-        public TeamCityBuildQueuer(ITeamCityConnectionInfo connectionInfo, ILogger logger, IGenericBuildMasterContext context)
+#if BuildMaster
+        public TeamCityBuildQueuer(ITeamCityConnectionInfo connectionInfo, ILogger logger)
+            : this(connectionInfo, ShimLogger.Create(logger))
         {
-            if (context == null)
-                throw new ArgumentNullException(nameof(context));
-            if (context.ApplicationId == null)
-                throw new InvalidOperationException("context requires a valid application ID");
+        }
+#endif
 
+        public TeamCityBuildQueuer(ITeamCityConnectionInfo connectionInfo, ILogSink logger)
+        {
             this.ConnectionInfo = connectionInfo ?? throw new ArgumentNullException(nameof(connectionInfo));
             this.Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this.Context = context;
         }
 
         public OperationProgress GetProgress()
@@ -91,11 +90,11 @@ namespace Inedo.BuildMasterExtensions.TeamCity
 
                 if (status.Success)
                 {
-                    this.Logger.LogInformation("{0} build #{1} successful. TeamCity reports: {2}", status.ProjectName, status.Number, status.StatusText);
+                    this.Logger.LogInformation($"{status.ProjectName} build #{status.Number} successful. TeamCity reports: {status.StatusText}");
                 }
                 else
                 {
-                    this.Logger.LogError("{0} build #{1} failed or encountered an error. TeamCity reports: {2}", status.ProjectName, status.Number, status.StatusText);
+                    this.Logger.LogError($"{status.ProjectName} build #{status.Number} failed or encountered an error. TeamCity reports: {status.StatusText}");
                 }
             }
         }

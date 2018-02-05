@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading.Tasks;
-using Inedo.BuildMaster.Extensibility.Credentials;
-using Inedo.BuildMaster.Extensibility.ListVariableSources;
 using Inedo.BuildMasterExtensions.TeamCity.Credentials;
 using Inedo.Documentation;
+using Inedo.Extensibility.Credentials;
+using Inedo.Extensibility.ListVariableSources;
 using Inedo.Serialization;
 
 namespace Inedo.BuildMasterExtensions.TeamCity.ListVariableSources

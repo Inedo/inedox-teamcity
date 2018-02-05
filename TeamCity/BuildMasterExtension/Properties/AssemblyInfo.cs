@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Inedo.BuildMaster.Extensibility;
+using Inedo.Extensibility;
 
 [assembly: AssemblyTitle("TeamCity")]
 [assembly: AssemblyDescription("Contains actions to get artifacts and trigger builds in TeamCity.")]

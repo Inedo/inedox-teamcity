@@ -1,7 +1,7 @@
-﻿using Inedo.Documentation;
-using Inedo.BuildMaster.Extensibility.BuildImporters;
-using Inedo.BuildMaster.Web;
+﻿using Inedo.BuildMaster.Extensibility.BuildImporters;
+using Inedo.Documentation;
 using Inedo.Serialization;
+using Inedo.Web;
 
 namespace Inedo.BuildMasterExtensions.TeamCity
 {

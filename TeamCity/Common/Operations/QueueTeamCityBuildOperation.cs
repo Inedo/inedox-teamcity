@@ -6,6 +6,9 @@ using Inedo.BuildMaster.Extensibility.Operations;
 using Inedo.BuildMaster.Web.Controls;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
+using Inedo.Extensibility;
+using Inedo.Extensibility.Operations;
+using Inedo.Web;
 
 namespace Inedo.BuildMasterExtensions.TeamCity.Operations
 {
@@ -25,12 +28,12 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
         [Required]
         [ScriptAlias("Project")]
         [DisplayName("Project name")]
-        [SuggestibleValue(typeof(ProjectNameSuggestionProvider))]
+        [SuggestableValue(typeof(ProjectNameSuggestionProvider))]
         public string ProjectName { get; set; }
         [Required]
         [ScriptAlias("BuildConfiguration")]
         [DisplayName("Build configuration")]
-        [SuggestibleValue(typeof(BuildConfigurationNameSuggestionProvider))]
+        [SuggestableValue(typeof(BuildConfigurationNameSuggestionProvider))]
         public string BuildConfigurationName { get; set; }
         [ScriptAlias("Branch")]
         [DisplayName("Branch name")]
@@ -57,7 +60,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
 
         public override Task ExecuteAsync(IOperationExecutionContext context)
         {
-            this.buildQueuer = new TeamCityBuildQueuer((ITeamCityConnectionInfo)this, (ILogger)this, context)
+            this.buildQueuer = new TeamCityBuildQueuer((ITeamCityConnectionInfo)this, (ILogSink)this)
             {
                 ProjectName = this.ProjectName,
                 BuildConfigurationId = this.BuildConfigurationId,

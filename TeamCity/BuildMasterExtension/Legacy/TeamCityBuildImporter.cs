@@ -1,19 +1,11 @@
 ﻿using System;
 using System.ComponentModel;
-using System.IO;
-using System.Net;
 using System.Xml.Linq;
-using Inedo.Agents;
-using Inedo.BuildMaster;
-using Inedo.BuildMaster.Artifacts;
 using Inedo.BuildMaster.Data;
-using Inedo.BuildMaster.Extensibility.Agents;
 using Inedo.BuildMaster.Extensibility.BuildImporters;
-using Inedo.BuildMaster.Files;
-using Inedo.BuildMaster.Web;
 using Inedo.Diagnostics;
-using Inedo.IO;
 using Inedo.Serialization;
+using Inedo.Web;
 
 namespace Inedo.BuildMasterExtensions.TeamCity
 {
@@ -41,7 +33,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity
         public override void Import(IBuildImporterContext context)
         {
             var configurer = this.GetExtensionConfigurer();
-            var importer = new TeamCityArtifactImporter(configurer, (ILogger)this, context)
+            var importer = new TeamCityArtifactImporter(configurer, ShimLogger.Create(this), context)
             {
                 ArtifactName = this.ArtifactName,
                 BranchName = this.GetBranchName(configurer),
@@ -50,7 +42,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity
             };
             string teamCityBuildNumber = importer.ImportAsync().Result();
             
-            this.LogDebug("TeamCity build number resolved to {0}, creating $TeamCityBuildNumber variable...", teamCityBuildNumber);
+            this.LogDebug($"TeamCity build number resolved to {teamCityBuildNumber}, creating $TeamCityBuildNumber variable...");
 
             DB.Variables_CreateOrUpdateVariableDefinition(
                 "TeamCityBuildNumber",
@@ -74,11 +66,11 @@ namespace Inedo.BuildMasterExtensions.TeamCity
             string apiUrl = this.TryGetPredefinedConstantBuildNumberApiUrl(buildNumber);
             if (apiUrl == null)
             {
-                this.LogDebug("Using explicit build number: {0}", buildNumber);
+                this.LogDebug($"Using explicit build number: {buildNumber}");
                 return buildNumber;
             }
 
-            this.LogDebug("Build number is the predefined constant \"{0}\", resolving...", buildNumber);
+            this.LogDebug($"Build number is the predefined constant \"{buildNumber}\", resolving...");
 
             try
             {
@@ -96,7 +88,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity
             }
             catch (Exception ex)
             {
-                this.LogError("Could not parse actual build number from TeamCity. Exception details: {0}", ex);
+                this.LogError("Could not parse actual build number from TeamCity. Exception details: " + ex);
                 return null;
             }
         }

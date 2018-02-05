@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading.Tasks;
-using Inedo.BuildMaster.Extensibility.Credentials;
-using Inedo.BuildMaster.Extensibility.ListVariableSources;
-using Inedo.BuildMaster.Web.Controls;
 using Inedo.BuildMasterExtensions.TeamCity.Credentials;
 using Inedo.Documentation;
+using Inedo.Extensibility.Credentials;
+using Inedo.Extensibility.ListVariableSources;
 using Inedo.Serialization;
+using Inedo.Web;
 
 namespace Inedo.BuildMasterExtensions.TeamCity.ListVariableSources
 {
@@ -22,7 +22,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity.ListVariableSources
 
         [Persistent]
         [DisplayName("Project name")]
-        [SuggestibleValue(typeof(ProjectNameSuggestionProvider))]
+        [SuggestableValue(typeof(ProjectNameSuggestionProvider))]
         [Required]
         public string ProjectName { get; set; }
 

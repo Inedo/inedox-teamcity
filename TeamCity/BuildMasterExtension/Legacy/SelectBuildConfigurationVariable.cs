@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using Inedo.BuildMaster.Extensibility.Variables;
-using Inedo.BuildMaster.Web;
 using Inedo.Serialization;
+using Inedo.Web;
 
 namespace Inedo.BuildMasterExtensions.TeamCity
 {

@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Extensibility.Credentials;
-using Inedo.BuildMaster.Web.Controls;
 using Inedo.BuildMasterExtensions.TeamCity.Credentials;
+using Inedo.Extensibility;
+using Inedo.Extensibility.Credentials;
+using Inedo.Web;
 
 namespace Inedo.BuildMasterExtensions.TeamCity
 {

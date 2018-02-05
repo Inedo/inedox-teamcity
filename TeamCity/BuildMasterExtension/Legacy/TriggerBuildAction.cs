@@ -6,6 +6,7 @@ using Inedo.BuildMaster.Web;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Serialization;
+using Inedo.Web;
 
 namespace Inedo.BuildMasterExtensions.TeamCity
 {
@@ -39,7 +40,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity
             var configurer = this.GetExtensionConfigurer();
             string branch = this.GetBranchName(configurer);
 
-            var queuer = new TeamCityBuildQueuer(configurer, (ILogger)this, (IGenericBuildMasterContext)this.Context)
+            var queuer = new TeamCityBuildQueuer(configurer, (ILogger)this)
             {
                 BuildConfigurationId = this.BuildConfigurationId,
                 AdditionalParameters = this.AdditionalParameters,

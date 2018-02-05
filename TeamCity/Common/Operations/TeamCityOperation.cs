@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel;
-using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Extensibility.Credentials;
-using Inedo.BuildMaster.Extensibility.Operations;
 using Inedo.BuildMasterExtensions.TeamCity.Credentials;
 using Inedo.Documentation;
+using Inedo.Extensibility;
+using Inedo.Extensibility.Credentials;
+using Inedo.Extensibility.Operations;
 
 namespace Inedo.BuildMasterExtensions.TeamCity.Operations
 {

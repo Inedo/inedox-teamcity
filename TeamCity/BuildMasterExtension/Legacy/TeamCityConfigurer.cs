@@ -2,8 +2,8 @@
 using System.Linq;
 using Inedo.BuildMaster.Data;
 using Inedo.BuildMaster.Extensibility.Configurers.Extension;
-using Inedo.BuildMaster.Web;
 using Inedo.Serialization;
+using Inedo.Web;
 
 [assembly: ExtensionConfigurer(typeof(Inedo.BuildMasterExtensions.TeamCity.TeamCityConfigurer))]
 

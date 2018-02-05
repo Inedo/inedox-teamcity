@@ -1,12 +1,13 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using Inedo.BuildMaster;
-using Inedo.BuildMaster.Data;
 using Inedo.BuildMaster.Extensibility;
-using Inedo.BuildMaster.Extensibility.Operations;
-using Inedo.BuildMaster.Web.Controls;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
+using Inedo.Extensibility;
+using Inedo.Extensibility.Operations;
+using Inedo.Web;
 
 namespace Inedo.BuildMasterExtensions.TeamCity.Operations
 {
@@ -23,11 +24,11 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
 
         [ScriptAlias("Project")]
         [DisplayName("Project name")]
-        [SuggestibleValue(typeof(ProjectNameSuggestionProvider))]
+        [SuggestableValue(typeof(ProjectNameSuggestionProvider))]
         public string ProjectName { get; set; }
         [ScriptAlias("BuildConfiguration")]
         [DisplayName("Build configuration")]
-        [SuggestibleValue(typeof(BuildConfigurationNameSuggestionProvider))]
+        [SuggestableValue(typeof(BuildConfigurationNameSuggestionProvider))]
         public string BuildConfigurationName { get; set; }
 
         [ScriptAlias("BuildConfigurationId")]
@@ -40,7 +41,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
         [DefaultValue("lastSuccessful")]
         [PlaceholderText("lastSuccessful")]
         [Description("The build number may be a specific build number, or a special value such as \"lastSuccessful\", \"lastFinished\", or \"lastPinned\".")]
-        [SuggestibleValue(typeof(BuildNumberSuggestionProvider))]
+        [SuggestableValue(typeof(BuildNumberSuggestionProvider))]
         public string BuildNumber { get; set; }
         [Required]
         [ScriptAlias("Artifact")]
@@ -59,7 +60,10 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
 
         public async override Task ExecuteAsync(IOperationExecutionContext context)
         {
-            var importer = new TeamCityArtifactImporter((ITeamCityConnectionInfo)this, (ILogger)this, context)
+            if (!(context is IGenericBuildMasterContext bmContext))
+                throw new InvalidOperationException("This operation requires an IGenericBuildMasterContext context");
+
+            var importer = new TeamCityArtifactImporter((ITeamCityConnectionInfo)this, (ILogSink)this, bmContext)
             {
                 ArtifactName = this.ArtifactName,
                 ProjectName = this.ProjectName,

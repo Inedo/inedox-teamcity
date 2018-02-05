@@ -22,10 +22,10 @@ namespace Inedo.BuildMasterExtensions.TeamCity
         public string BranchName { get; set; }
 
         public ITeamCityConnectionInfo ConnectionInfo { get; }
-        public ILogger Logger { get; }
+        public ILogSink Logger { get; }
         public IGenericBuildMasterContext Context { get; }
 
-        public TeamCityArtifactImporter(ITeamCityConnectionInfo connectionInfo, ILogger logger, IGenericBuildMasterContext context)
+        public TeamCityArtifactImporter(ITeamCityConnectionInfo connectionInfo, ILogSink logger, IGenericBuildMasterContext context)
         {
             if (context == null)
                 throw new ArgumentNullException(nameof(context));
@@ -67,7 +67,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity
                 relativeUrl += "?branch=" + Uri.EscapeDataString(this.BranchName);
             }
 
-            this.Logger.LogDebug("Importing TeamCity artifact \"{0}\" from {1}...", this.ArtifactName, this.ConnectionInfo.GetApiUrl() + relativeUrl);
+            this.Logger.LogDebug(string.Format("Importing TeamCity artifact \"{0}\" from {1}...", this.ArtifactName, this.ConnectionInfo.GetApiUrl() + relativeUrl));
 
             string tempFile = null;
             try

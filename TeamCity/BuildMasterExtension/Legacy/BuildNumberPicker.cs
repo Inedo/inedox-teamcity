@@ -9,6 +9,7 @@ using Inedo.BuildMaster;
 using Inedo.Web.ClientResources;
 using Inedo.Web.Controls;
 using Inedo.Web.Handlers;
+using Newtonsoft.Json;
 
 namespace Inedo.BuildMasterExtensions.TeamCity
 {
@@ -47,7 +48,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity
             writer.Write("<script type=\"text/javascript\">$(function(){");
 
             writer.Write("BmTeamCityBuildNumberPicker(");
-            InedoLib.Util.JavaScript.WriteJson(
+            JsonSerializer.CreateDefault().Serialize(
                 writer,
                 new
                 {

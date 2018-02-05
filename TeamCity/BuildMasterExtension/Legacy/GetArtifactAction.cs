@@ -1,12 +1,11 @@
 ﻿using System;
 using System.ComponentModel;
 using System.IO;
+using Inedo.Agents;
 using Inedo.BuildMaster;
 using Inedo.Documentation;
-using Inedo.BuildMaster.Extensibility.Agents;
-using Inedo.BuildMaster.Web;
 using Inedo.Serialization;
-using Inedo.Agents;
+using Inedo.Web;
 
 namespace Inedo.BuildMasterExtensions.TeamCity
 {
