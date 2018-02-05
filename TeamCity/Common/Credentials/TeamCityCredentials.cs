@@ -12,6 +12,7 @@ namespace Inedo.Extensions.TeamCity.Credentials
     [ScriptAlias("TeamCity")]
     [DisplayName("TeamCity")]
     [Description("Credentials for TeamCity.")]
+    [PersistFrom("Inedo.BuildMasterExtensions.TeamCity.Credentials.TeamCityCredentials,TeamCity")]
     public sealed class TeamCityCredentials : ResourceCredentials, ITeamCityConnectionInfo
     {
         [Required]
