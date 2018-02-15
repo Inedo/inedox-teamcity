@@ -4,8 +4,6 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using Inedo.BuildMaster.Artifacts;
-using Inedo.BuildMaster.Extensibility;
 using Inedo.Diagnostics;
 using Inedo.ExecutionEngine.Executer;
 using Inedo.Extensions.TeamCity;
@@ -24,9 +22,9 @@ namespace Inedo.BuildMasterExtensions.TeamCity
 
         public ITeamCityConnectionInfo ConnectionInfo { get; }
         public ILogSink Logger { get; }
-        public IGenericBuildMasterContext Context { get; }
+        public dynamic Context { get; }
 
-        public TeamCityArtifactImporter(ITeamCityConnectionInfo connectionInfo, ILogSink logger, IGenericBuildMasterContext context)
+        public TeamCityArtifactImporter(ITeamCityConnectionInfo connectionInfo, ILogSink logger, dynamic context)
         {
             if (context == null)
                 throw new ArgumentNullException(nameof(context));
@@ -94,7 +92,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity
                 this.Logger.LogInformation("Importing artifact into BuildMaster...");
                 using (var file = File.OpenRead(tempFile))
                 {
-                    await Artifact.CreateArtifactAsync(
+                    await SDK.CreateArtifactAsync(
                         applicationId: (int)this.Context.ApplicationId,
                         releaseNumber: this.Context.ReleaseNumber,
                         buildNumber: this.Context.BuildNumber,

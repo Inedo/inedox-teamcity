@@ -1,11 +1,11 @@
-bmx-teamcity
+TeamCity Extension
 ============
 
-TeamCity BuildMaster extension
+TeamCity integration for Inedo products.
 
 **License**
 
-Copyright (c) 2013 Inedo, LLC. All rights reserved.
+Copyright (c) 2018 Inedo, LLC. All rights reserved.
 
 http://inedo.com/buildmaster/extensions/TeamCity
 

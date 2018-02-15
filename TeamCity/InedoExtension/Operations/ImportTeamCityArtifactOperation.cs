@@ -1,8 +1,5 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Threading.Tasks;
-using Inedo.BuildMaster;
-using Inedo.BuildMaster.Extensibility;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility;
@@ -17,7 +14,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
     [DisplayName("Import Artifact from TeamCity")]
     [Description("Downloads an artifact from the specified TeamCity server and saves it to the artifact library.")]
     [ScriptAlias("Import-Artifact")]
-    [Tag(Tags.Artifacts)]
+    [Tag("artifacts")]
     [Tag("teamcity")]
     public sealed class ImportTeamCityArtifactOperation : TeamCityOperation
     {
@@ -63,10 +60,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
 
         public async override Task ExecuteAsync(IOperationExecutionContext context)
         {
-            if (!(context is IGenericBuildMasterContext bmContext))
-                throw new InvalidOperationException("This operation requires an IGenericBuildMasterContext context");
-
-            var importer = new TeamCityArtifactImporter((ITeamCityConnectionInfo)this, (ILogSink)this, bmContext)
+            var importer = new TeamCityArtifactImporter((ITeamCityConnectionInfo)this, (ILogSink)this, context)
             {
                 ArtifactName = this.ArtifactName,
                 ProjectName = this.ProjectName,

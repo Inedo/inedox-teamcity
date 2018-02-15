@@ -24,13 +24,6 @@ namespace Inedo.Extensions.TeamCity
         public ITeamCityConnectionInfo ConnectionInfo { get; }
         public ILogSink Logger { get; }
 
-#if BuildMaster
-        public TeamCityBuildQueuer(ITeamCityConnectionInfo connectionInfo, ILogger logger)
-            : this(connectionInfo, BuildMasterExtensions.TeamCity.ShimLogger.Create(logger))
-        {
-        }
-#endif
-
         public TeamCityBuildQueuer(ITeamCityConnectionInfo connectionInfo, ILogSink logger)
         {
             this.ConnectionInfo = connectionInfo ?? throw new ArgumentNullException(nameof(connectionInfo));
