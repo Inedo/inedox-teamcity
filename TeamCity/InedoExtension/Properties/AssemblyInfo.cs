@@ -13,3 +13,5 @@ using Inedo.Extensibility;
 [assembly: AssemblyFileVersion("0.0")]
 
 [assembly: ScriptNamespace("TeamCity")]
+
+[assembly: AppliesTo(InedoProduct.BuildMaster)]
