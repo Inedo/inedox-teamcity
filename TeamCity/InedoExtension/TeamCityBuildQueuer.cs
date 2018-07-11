@@ -160,7 +160,7 @@ namespace Inedo.Extensions.TeamCity
             this.BuildConfigurationId = (string)e.Attribute("id");
             this.BuildConfigurationName = (string)e.Attribute("name");
             this.ProjectName = (string)e.Attribute("projectName");
-            this.ProjectNameParts = this.ProjectName.Split(new[] { " :: " }, StringSplitOptions.None);
+            this.ProjectNameParts = this.ProjectName.Split(new[] { " :: ", " / " }, StringSplitOptions.None);
         }
         public string BuildConfigurationId { get; }
         public string BuildConfigurationName { get; }

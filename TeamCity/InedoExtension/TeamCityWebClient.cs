@@ -42,13 +42,18 @@ namespace Inedo.Extensions.TeamCity
         }
         public async Task<IList<string>> GetQualifiedProjectNamesAsync()
         {
-            var xdoc = await this.DownloadXDocumentAsync("app/rest/projects").ConfigureAwait(false);
+            var xdoc = await this.DownloadXDocumentAsync("app/rest/projects?fields=project(id,name,parentProjectId,buildTypes(buildType(projectName)))").ConfigureAwait(false);
 
             var projects = xdoc.Element("projects").Elements("project");
 
-            return projects.Select(p => GetQualifiedProjectName(projects, p.Attribute("parentProjectId"), (string)p.Attribute("name"))).ToList();
+            // Assume double colons if any project names have them; otherwise, use slashes.
+            var separator = projects.SelectMany(p => p.Element("buildTypes").Elements("buildType"))
+                .All(bt => !bt.Attribute("projectName").Value.Contains(" :: ")) ? " :: " : " / ";
+
+            return projects.Select(p => p.Element("buildTypes").Elements("buildType").Select(bt => bt.Attribute("projectName").Value).FirstOrDefault()
+                ?? GetQualifiedProjectName(projects, p.Attribute("parentProjectId"), (string)p.Attribute("name"), separator)).ToList();
         }
-        private static string GetQualifiedProjectName(IEnumerable<XElement> projects, XAttribute parentId, string name)
+        private static string GetQualifiedProjectName(IEnumerable<XElement> projects, XAttribute parentId, string name, string separator = " :: ")
         {
             if (parentId == null)
                 return name;
@@ -61,7 +66,7 @@ namespace Inedo.Extensions.TeamCity
             if (parentParentId == null) // Don't put <Root project> before all project names.
                 return name;
 
-            return GetQualifiedProjectName(projects, parentParentId, parent.Attribute("name").Value + " :: " + name);
+            return GetQualifiedProjectName(projects, parentParentId, parent.Attribute("name").Value + separator + name);
         }
         public async Task<IList<string>> GetBuildTypeNamesAsync(string projectName)
         {
