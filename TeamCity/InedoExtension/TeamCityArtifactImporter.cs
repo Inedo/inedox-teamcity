@@ -59,8 +59,10 @@ namespace Inedo.BuildMasterExtensions.TeamCity
                 this.BuildNumber = "lastSuccessful";
             }
 
-            string relativeUrl = string.Format("repository/download/{0}/{1}/{2}", this.BuildConfigurationId, this.BuildNumber, this.ArtifactName);
+            //repository/download/BUILD_TYPE_ID/BUILD_ID:id/ARTIFACT_PATH
+            string relativeUrl = string.Format("repository/download/{0}/{1}:id/{2}", this.BuildConfigurationId, this.BuildNumber, this.ArtifactName);
 
+            
             if (!string.IsNullOrEmpty(this.BranchName))
             {
                 this.Logger.LogDebug("Branch name was specified: " + this.BranchName);
