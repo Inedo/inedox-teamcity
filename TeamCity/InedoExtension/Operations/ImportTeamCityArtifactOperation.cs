@@ -6,7 +6,6 @@ using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Operations;
-using Inedo.Extensions.TeamCity;
 using Inedo.Extensions.TeamCity.Operations;
 using Inedo.Extensions.TeamCity.SuggestionProviders;
 using Inedo.Web;
@@ -42,7 +41,8 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
         [DisplayName("Build number")]
         [DefaultValue("lastSuccessful")]
         [PlaceholderText("lastSuccessful")]
-        [Description("The build number may be a specific build number, or a special value such as \"lastSuccessful\", \"lastFinished\", or \"lastPinned\".")]
+        [Description("The build number may be a specific build number, or a special value such as \"lastSuccessful\", \"lastFinished\", or \"lastPinned\". " 
+            + "To specify a build ID instead, append ':id' as a suffix, e.g. 1234:id")]
         [SuggestableValue(typeof(BuildNumberSuggestionProvider))]
         public string BuildNumber { get; set; }
         [Required]

@@ -59,8 +59,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity
                 this.BuildNumber = "lastSuccessful";
             }
 
-            //repository/download/BUILD_TYPE_ID/BUILD_ID:id/ARTIFACT_PATH
-            string relativeUrl = string.Format("repository/download/{0}/{1}:id/{2}", this.BuildConfigurationId, this.BuildNumber, this.ArtifactName);
+            string relativeUrl = $"repository/download/{this.BuildConfigurationId}/{this.BuildNumber}/{this.ArtifactName}";
 
             
             if (!string.IsNullOrEmpty(this.BranchName))
@@ -69,7 +68,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity
                 relativeUrl += "?branch=" + Uri.EscapeDataString(this.BranchName);
             }
 
-            this.Logger.LogDebug(string.Format("Importing TeamCity artifact \"{0}\" from {1}...", this.ArtifactName, this.ConnectionInfo.GetApiUrl() + relativeUrl));
+            this.Logger.LogDebug($"Importing TeamCity artifact \"{this.ArtifactName}\" from {this.ConnectionInfo.GetApiUrl() + relativeUrl}...");
 
             string tempFile = null;
             try
