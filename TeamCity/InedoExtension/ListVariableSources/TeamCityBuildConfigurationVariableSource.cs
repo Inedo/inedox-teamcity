@@ -8,6 +8,7 @@ using Inedo.Extensibility.ListVariableSources;
 using Inedo.Serialization;
 using Inedo.Web;
 using Inedo.Extensions.TeamCity.SuggestionProviders;
+using System.Linq;
 
 namespace Inedo.Extensions.TeamCity.ListVariableSources
 {
@@ -29,7 +30,9 @@ namespace Inedo.Extensions.TeamCity.ListVariableSources
 
         public override async Task<IEnumerable<string>> EnumerateValuesAsync(ValueEnumerationContext context)
         {
-            var credentials = ResourceCredentials.Create<TeamCityCredentials>(this.CredentialName);
+            var credentials = TeamCityCredentials.TryCreate(this.CredentialName, context);
+            if (credentials == null)
+                return Enumerable.Empty<string>();
 
             using (var client = new TeamCityWebClient(credentials))
             {

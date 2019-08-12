@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Inedo.Extensions.TeamCity.Credentials;
 using Inedo.Extensibility;
-using Inedo.Extensibility.Credentials;
+using Inedo.Extensions.TeamCity.Credentials;
 using Inedo.Web;
 
 namespace Inedo.Extensions.TeamCity.SuggestionProviders
@@ -24,7 +23,10 @@ namespace Inedo.Extensions.TeamCity.SuggestionProviders
             if (string.IsNullOrEmpty(projectName))
                 return Enumerable.Empty<string>();
 
-            var credentials = ResourceCredentials.Create<TeamCityCredentials>(credentialName);
+            var credentials = TeamCityCredentials.TryCreate(credentialName, config);
+            if (credentials == null)
+                return Enumerable.Empty<string>();
+
             using (var client = new TeamCityWebClient(credentials))
             {
                 return await client.GetBuildNumbersAsync(projectName, buildConfigurationName).ConfigureAwait(false);
