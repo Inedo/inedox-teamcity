@@ -7,6 +7,7 @@ using Inedo.Extensibility.Credentials;
 using Inedo.Extensibility.ListVariableSources;
 using Inedo.Serialization;
 using Inedo.Web;
+using Inedo.Web.Plans;
 
 namespace Inedo.Extensions.TeamCity.Credentials
 {
@@ -58,7 +59,7 @@ namespace Inedo.Extensions.TeamCity.Credentials
 
         internal static TeamCityCredentials TryCreate(string name, IComponentConfiguration config)
         {
-            int? projectId = AH.ParseInt(AH.CoalesceString(config["ProjectId"], config["ApplicationId"]));
+            int? projectId = (config.EditorContext as IOperationEditorContext)?.ProjectId ?? AH.ParseInt(AH.CoalesceString(config["ProjectId"], config["ApplicationId"]));
             int? environmentId = AH.ParseInt(config["EnvironmentId"]);
 
             return (TeamCityCredentials)ResourceCredentials.TryCreate(TeamCityCredentials.TypeName, name, environmentId: environmentId, applicationId: projectId, inheritFromParent: false);
