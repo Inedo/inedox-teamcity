@@ -9,6 +9,12 @@ namespace Inedo.Extensions.TeamCity
 {
     internal sealed class TeamCityWebClient : WebClient
     {
+        static TeamCityWebClient()
+        {
+            // ensure TLS v1.2 is supported
+            ServicePointManager.SecurityProtocol = ServicePointManager.SecurityProtocol | SecurityProtocolType.Tls12;
+        }
+
         public TeamCityWebClient(ITeamCityConnectionInfo connectionInfo)
         {
             this.BaseAddress = connectionInfo.GetApiUrl();
