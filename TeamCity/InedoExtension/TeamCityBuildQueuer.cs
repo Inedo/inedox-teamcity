@@ -35,7 +35,7 @@ namespace Inedo.Extensions.TeamCity
             return new OperationProgress(this.progressPercent, this.progressMessage);
         }
 
-        public async Task QueueBuildAsync(CancellationToken cancellationToken, bool logProgressToExecutionLog)
+        public async Task<TeamCityBuildStatus> QueueBuildAsync(CancellationToken cancellationToken, bool logProgressToExecutionLog)
         {
             this.Logger.LogInformation($"Queueing build in TeamCity...");
 
@@ -62,7 +62,7 @@ namespace Inedo.Extensions.TeamCity
                 this.Logger.LogInformation("Build of {0} was triggered successfully.", this.BuildConfigurationId);                
 
                 if (!this.WaitForCompletion)
-                    return;
+                    return status;
 
                 this.Logger.LogInformation("Waiting for build to complete...");
 
@@ -89,6 +89,8 @@ namespace Inedo.Extensions.TeamCity
                 {
                     this.Logger.LogError($"{status.ProjectName} build #{status.Number} failed or encountered an error. TeamCity reports: {status.StatusText}");
                 }
+
+                return status;
             }
         }
 
@@ -120,7 +122,7 @@ namespace Inedo.Extensions.TeamCity
             }
         }
 
-        private sealed class TeamCityBuildStatus
+        public sealed class TeamCityBuildStatus
         {
             public string Id { get; }
             public string Number { get; }

@@ -40,6 +40,12 @@ namespace Inedo.Extensions.TeamCity.Operations
         [Description("TeamCity identifier that targets a single build configuration. May be specified instead of the Project name and Build configuration name.")]
         public string BuildConfigurationId { get; set; }
 
+        [Output]
+        [ScriptAlias("TeamCityBuildNumber")]
+        [DisplayName("Set build number to variable")]
+        [Description("The TeamCity build number can be output into a runtime variable.")]
+        public string TeamCityBuildNumber { get; set; }
+
         [Category("Advanced")]
         [ScriptAlias("AdditionalParameters")]
         [DisplayName("Additional parameters")]
@@ -53,7 +59,7 @@ namespace Inedo.Extensions.TeamCity.Operations
         [PlaceholderText("true")]
         public bool WaitForCompletion { get; set; } = true;
 
-        public override Task ExecuteAsync(IOperationExecutionContext context)
+        public override async Task ExecuteAsync(IOperationExecutionContext context)
         {
             this.buildQueuer = new TeamCityBuildQueuer((ITeamCityConnectionInfo)this, (ILogSink)this)
             {
@@ -65,7 +71,9 @@ namespace Inedo.Extensions.TeamCity.Operations
                 BranchName = this.BranchName
             };
 
-            return this.buildQueuer.QueueBuildAsync(context.CancellationToken, logProgressToExecutionLog: false);
+            var status = await this.buildQueuer.QueueBuildAsync(context.CancellationToken, logProgressToExecutionLog: false);
+
+            this.TeamCityBuildNumber = status.Number;
         }
 
         public override OperationProgress GetProgress()
