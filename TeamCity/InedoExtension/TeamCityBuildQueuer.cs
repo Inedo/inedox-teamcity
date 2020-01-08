@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -50,16 +51,37 @@ namespace Inedo.Extensions.TeamCity
                 if (this.BranchName != null)
                     this.Logger.LogDebug("Using branch: " + this.BranchName);
 
-                var xdoc = new XDocument(
-                    new XElement("build",
-                        new XAttribute("branchName", this.BranchName ?? ""),
-                        new XElement("buildType", new XAttribute("id", this.BuildConfigurationId))
-                    )
+                XElement buildElement = new XElement("build",
+                    new XAttribute("branchName", this.BranchName ?? ""),
+                    new XElement("buildType", new XAttribute("id", this.BuildConfigurationId))
                 );
+
+                if (!string.IsNullOrWhiteSpace(AdditionalParameters))
+                {
+                    XElement propertiesElement = new XElement("properties");
+                    Dictionary<string, string> properties = AdditionalParameters
+                        .Split(new[] { '&' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(part => part.Split('='))
+                        .Where(part => part.Length == 2)
+                        .ToDictionary(split => split[0], split => split[1]);
+
+                    foreach (var property in properties)
+                    {
+                        propertiesElement.Add(new XElement("property",
+                            new XAttribute("name", property.Key),
+                            new XAttribute("value", property.Value)));
+                    }
+
+                    if (propertiesElement.HasElements)
+                        buildElement.Add(propertiesElement);
+                }
+
+                XDocument xdoc = new XDocument(buildElement);
+
                 string response = await client.UploadStringTaskAsync("app/rest/buildQueue", xdoc.ToString(SaveOptions.DisableFormatting)).ConfigureAwait(false);
                 var status = new TeamCityBuildStatus(response);
 
-                this.Logger.LogInformation("Build of {0} was triggered successfully.", this.BuildConfigurationId);                
+                this.Logger.LogInformation("Build of {0} was triggered successfully.", this.BuildConfigurationId);
 
                 if (!this.WaitForCompletion)
                     return status;
