@@ -2,11 +2,13 @@
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using Inedo.BuildMaster.Extensibility;
 using Inedo.Diagnostics;
 using Inedo.ExecutionEngine.Executer;
+using Inedo.Extensibility.Operations;
 using Inedo.Extensions.TeamCity;
 using Inedo.IO;
 
@@ -23,18 +25,17 @@ namespace Inedo.BuildMasterExtensions.TeamCity
 
         public ITeamCityConnectionInfo ConnectionInfo { get; }
         public ILogSink Logger { get; }
-        public IGenericBuildMasterContext Context { get; }
 
-        public TeamCityArtifactImporter(ITeamCityConnectionInfo connectionInfo, ILogSink logger, IGenericBuildMasterContext context)
+        private readonly BuildMasterContextShim context;
+
+        public TeamCityArtifactImporter(ITeamCityConnectionInfo connectionInfo, ILogSink logger, IOperationExecutionContext context)
         {
             if (context == null)
                 throw new ArgumentNullException(nameof(context));
-            if (context.ApplicationId == null)
-                throw new InvalidOperationException("context requires a valid application ID");
 
             this.ConnectionInfo = connectionInfo ?? throw new ArgumentNullException(nameof(connectionInfo));
             this.Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            this.Context = context;
+            this.context = new BuildMasterContextShim(context);
         }
 
         public async Task<string> ImportAsync()
@@ -95,11 +96,11 @@ namespace Inedo.BuildMasterExtensions.TeamCity
                 using (var file = File.OpenRead(tempFile))
                 {
                     await SDK.CreateArtifactAsync(
-                        applicationId: (int)this.Context.ApplicationId,
-                        releaseNumber: this.Context.ReleaseNumber,
-                        buildNumber: this.Context.BuildNumber,
-                        deployableId: this.Context.DeployableId,
-                        executionId: this.Context.ExecutionId,
+                        applicationId: (int)this.context.ApplicationId,
+                        releaseNumber: this.context.ReleaseNumber,
+                        buildNumber: this.context.BuildNumber,
+                        deployableId: this.context.DeployableId,
+                        executionId: this.context.ExecutionId,
                         artifactName: TrimWhitespaceAndZipExtension(this.ArtifactName),
                         artifactData: file,
                         overwrite: true
@@ -201,6 +202,28 @@ namespace Inedo.BuildMasterExtensions.TeamCity
                 return file.Substring(0, file.Length - ".zip".Length);
             else
                 return file;
+        }
+
+        private sealed class BuildMasterContextShim
+        {
+            private readonly IOperationExecutionContext context;
+            private readonly PropertyInfo[] properties;
+            public BuildMasterContextShim(IOperationExecutionContext context)
+            {
+                // this is copied from Jenkins, and similarly is absolutely horrid, but works for backwards compatibility since this can only be used in BuildMaster
+                this.context = context;
+                this.properties = context.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            }
+            public int? ApplicationId => AH.ParseInt(this.GetValue());
+            public int? DeployableId => AH.ParseInt(this.GetValue());
+            public string ReleaseNumber => this.GetValue();
+            public string BuildNumber => this.GetValue();
+            public int ExecutionId => this.context.ExecutionId;
+            private string GetValue([CallerMemberName] string name = null)
+            {
+                var prop = this.properties.FirstOrDefault(p => string.Equals(name, p.Name, StringComparison.OrdinalIgnoreCase));
+                return prop?.GetValue(this.context)?.ToString();
+            }
         }
     }
 }

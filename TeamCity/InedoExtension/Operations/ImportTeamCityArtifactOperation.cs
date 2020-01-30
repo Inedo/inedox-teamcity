@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Threading.Tasks;
-using Inedo.BuildMaster.Extensibility;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility;
@@ -62,10 +61,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
 
         public async override Task ExecuteAsync(IOperationExecutionContext context)
         {
-            if (!(context is IGenericBuildMasterContext bmContext))
-                throw new NotSupportedException("An instance of IGenericBuildMasterContext is required for this operation");
-
-            var importer = new TeamCityArtifactImporter(this, this, bmContext)
+            var importer = new TeamCityArtifactImporter(this, this, context)
             {
                 ArtifactName = this.ArtifactName,
                 ProjectName = this.ProjectName,
