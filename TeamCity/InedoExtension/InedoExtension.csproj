@@ -70,7 +70,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Credentials\TeamCityCredentials.cs" />
-    <Compile Include="Credentials\TeamCitySecureResource.cs" />
     <Compile Include="ITeamCityConnectionInfo.cs" />
     <Compile Include="ListVariableSources\TeamCityBuildConfigurationVariableSource.cs" />
     <Compile Include="ListVariableSources\TeamCityBuildNumberVariableSource.cs" />

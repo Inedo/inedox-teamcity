@@ -65,8 +65,5 @@ namespace Inedo.Extensions.TeamCity.Credentials
 
             return (TeamCityCredentials)ResourceCredentials.TryCreate(TeamCityCredentials.TypeName, name, environmentId: environmentId, applicationId: projectId, inheritFromParent: false);
         }
-
-        public override SecureResource ToSecureResource() => new TeamCitySecureResource { ServerUrl = this.ServerUrl };
-        public override SecureCredentials ToSecureCredentials() => new Extensions.Credentials.UsernamePasswordCredentials { UserName = this.UserName, Password = this.Password };
     }
 }
