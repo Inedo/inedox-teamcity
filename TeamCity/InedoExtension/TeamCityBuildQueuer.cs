@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Inedo.Diagnostics;
 using Inedo.ExecutionEngine.Executer;
+using Inedo.Extensibility.Credentials;
 using Inedo.Extensibility.Operations;
+using Inedo.Extensions.TeamCity.Credentials;
 
 namespace Inedo.Extensions.TeamCity
 {
@@ -22,12 +24,16 @@ namespace Inedo.Extensions.TeamCity
         public bool WaitForCompletion { get; set; }
         public string AdditionalParameters { get; set; }
 
-        public ITeamCityConnectionInfo ConnectionInfo { get; }
+        private readonly TeamCitySecureResource resource;
+        private readonly SecureCredentials credentials;
         public ILogSink Logger { get; }
 
-        public TeamCityBuildQueuer(ITeamCityConnectionInfo connectionInfo, ILogSink logger)
+        public TeamCityBuildQueuer(TeamCitySecureResource resource, SecureCredentials credentials, ILogSink logger)
         {
-            this.ConnectionInfo = connectionInfo ?? throw new ArgumentNullException(nameof(connectionInfo));
+
+            this.resource = resource ?? throw new ArgumentNullException(nameof(resource));
+            this.credentials = credentials;
+            
             this.Logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -45,7 +51,7 @@ namespace Inedo.Extensions.TeamCity
                 await SetBuildConfigurationIdFromName().ConfigureAwait(false);
             }
 
-            using (var client = new TeamCityWebClient(this.ConnectionInfo))
+            using (var client = new TeamCityWebClient(this.resource, this.credentials))
             {
                 this.Logger.LogDebug("Triggering build configuration {0}...", this.BuildConfigurationId);
                 if (this.BranchName != null)
@@ -119,7 +125,7 @@ namespace Inedo.Extensions.TeamCity
         private async Task SetBuildConfigurationIdFromName()
         {
             this.Logger.LogDebug("Attempting to resolve build configuration ID from project and name...");
-            using (var client = new TeamCityWebClient(this.ConnectionInfo))
+            using (var client = new TeamCityWebClient(this.resource, this.credentials))
             {
                 this.Logger.LogDebug("Downloading build types...");
                 string result = await client.DownloadStringTaskAsync("app/rest/buildTypes").ConfigureAwait(false);

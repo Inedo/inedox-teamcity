@@ -8,8 +8,10 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Inedo.Diagnostics;
 using Inedo.ExecutionEngine.Executer;
+using Inedo.Extensibility.Credentials;
 using Inedo.Extensibility.Operations;
 using Inedo.Extensions.TeamCity;
+using Inedo.Extensions.TeamCity.Credentials;
 using Inedo.IO;
 
 namespace Inedo.BuildMasterExtensions.TeamCity
@@ -23,17 +25,19 @@ namespace Inedo.BuildMasterExtensions.TeamCity
         public string BuildNumber { get; set; }
         public string BranchName { get; set; }
 
-        public ITeamCityConnectionInfo ConnectionInfo { get; }
+        private readonly TeamCitySecureResource resource;
+        private readonly SecureCredentials credentials;
         public ILogSink Logger { get; }
 
         private readonly BuildMasterContextShim context;
 
-        public TeamCityArtifactImporter(ITeamCityConnectionInfo connectionInfo, ILogSink logger, IOperationExecutionContext context)
+        public TeamCityArtifactImporter(TeamCitySecureResource resource, SecureCredentials credentials, ILogSink logger, IOperationExecutionContext context)
         {
             if (context == null)
                 throw new ArgumentNullException(nameof(context));
 
-            this.ConnectionInfo = connectionInfo ?? throw new ArgumentNullException(nameof(connectionInfo));
+            this.resource = resource ?? throw new ArgumentNullException(nameof(resource));
+            this.credentials = credentials;
             this.Logger = logger ?? throw new ArgumentNullException(nameof(logger));
             this.context = new BuildMasterContextShim(context);
         }
@@ -69,13 +73,13 @@ namespace Inedo.BuildMasterExtensions.TeamCity
                 relativeUrl += "?branch=" + Uri.EscapeDataString(this.BranchName);
             }
 
-            this.Logger.LogDebug($"Importing TeamCity artifact \"{this.ArtifactName}\" from {this.ConnectionInfo.GetApiUrl() + relativeUrl}...");
-
             string tempFile = null;
             try
             {
-                using (var client = new TeamCityWebClient(this.ConnectionInfo))
+                using (var client = new TeamCityWebClient(this.resource, this.credentials))
                 {
+                    this.Logger.LogDebug($"Importing TeamCity artifact \"{this.ArtifactName}\" from {client.BaseAddress + relativeUrl}...");
+
                     tempFile = Path.GetTempFileName();
                     this.Logger.LogDebug($"Downloading temp file to \"{tempFile}\"...");
                     try
@@ -139,7 +143,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity
                 if (this.BranchName != null)
                     apiUrl += ",branch:" + Uri.EscapeDataString(this.BranchName);
 
-                using (var client = new TeamCityWebClient(this.ConnectionInfo))
+                using (var client = new TeamCityWebClient(this.resource, this.credentials))
                 {
                     string xml = await client.DownloadStringTaskAsync(apiUrl).ConfigureAwait(false);
                     var doc = XDocument.Parse(xml);
@@ -170,7 +174,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity
         private async Task SetBuildConfigurationIdFromName()
         {
             this.Logger.LogDebug("Attempting to resolve build configuration ID from project and name...");
-            using (var client = new TeamCityWebClient(this.ConnectionInfo))
+            using (var client = new TeamCityWebClient(this.resource, this.credentials))
             {
                 this.Logger.LogDebug("Downloading build types...");
                 string result = await client.DownloadStringTaskAsync("app/rest/buildTypes").ConfigureAwait(false);

@@ -18,10 +18,6 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
     [Tag("teamcity")]
     public sealed class ImportTeamCityArtifactOperation : TeamCityOperation
     {
-        [ScriptAlias("Credentials")]
-        [DisplayName("Credentials")]
-        public override string CredentialName { get; set; }
-
         [ScriptAlias("Project")]
         [DisplayName("Project name")]
         [SuggestableValue(typeof(ProjectNameSuggestionProvider))]
@@ -61,7 +57,9 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
 
         public async override Task ExecuteAsync(IOperationExecutionContext context)
         {
-            var importer = new TeamCityArtifactImporter(this, this, context)
+            var (resource, client) = this.GetConnectionInfo(context);
+
+            var importer = new TeamCityArtifactImporter(resource, client, this, context)
             {
                 ArtifactName = this.ArtifactName,
                 ProjectName = this.ProjectName,

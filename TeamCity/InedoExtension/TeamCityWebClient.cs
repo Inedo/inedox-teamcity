@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Security;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Inedo.Extensibility.Credentials;
+using Inedo.Extensions.TeamCity.Credentials;
 
 namespace Inedo.Extensions.TeamCity
 {
@@ -15,17 +18,35 @@ namespace Inedo.Extensions.TeamCity
             ServicePointManager.SecurityProtocol = ServicePointManager.SecurityProtocol | SecurityProtocolType.Tls12;
         }
 
-        public TeamCityWebClient(ITeamCityConnectionInfo connectionInfo)
+        public TeamCityWebClient(TeamCitySecureResource resource, SecureCredentials secureCredentials)
         {
-            this.BaseAddress = connectionInfo.GetApiUrl();
+            string userName = null, password = null;
+            if (secureCredentials is TeamCityAccountSecureCredentials asc)
+            {
+                userName = asc.UserName;
+                password = AH.Unprotect(asc.Password);
+            }
+            else if (secureCredentials is TeamCityLegacyResourceCredentials lrc)
+            {
+                userName = lrc.UserName;
+                password = AH.Unprotect(lrc.Password);
+            }
+            else if (secureCredentials is TeamCityTokenSecureCredentials tct)
+            {
+                this.Headers.Add(HttpRequestHeader.Authorization, "Bearer " + AH.Unprotect(tct.Token));
+            }
+            else
+                throw new ArgumentException(nameof(secureCredentials));
 
-            if (!string.IsNullOrEmpty(connectionInfo.UserName))
+            this.BaseAddress = $"{resource.ServerUrl.TrimEnd('/')}/{(string.IsNullOrEmpty(userName) ? "guestAuth" : "httpAuth")}/";
+
+            if (!string.IsNullOrEmpty(userName))
             {
                 // Using a CredentialCache because API URLs with TeamCity variables in them will issue redirects
                 // to the actual URLs, and unlike the NetworkCredential class, CredentialCache will ensure that the
                 // credentials will be sent to the redirected URL as well
                 var credentials = new CredentialCache();
-                credentials.Add(new Uri(connectionInfo.GetApiUrl()), "Basic", new NetworkCredential(connectionInfo.UserName, connectionInfo.Password));
+                credentials.Add(new Uri(this.BaseAddress), "Basic", new NetworkCredential(userName, password));
                 this.Credentials = credentials;
             }
         }

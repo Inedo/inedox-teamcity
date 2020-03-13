@@ -1,26 +1,27 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Threading.Tasks;
-using Inedo.Extensions.TeamCity.Credentials;
 using Inedo.Documentation;
 using Inedo.Extensibility.Credentials;
 using Inedo.Extensibility.ListVariableSources;
+using Inedo.Extensibility.SecureResources;
+using Inedo.Extensions.TeamCity.Credentials;
+using Inedo.Extensions.TeamCity.SuggestionProviders;
 using Inedo.Serialization;
 using Inedo.Web;
-using Inedo.Extensions.TeamCity.SuggestionProviders;
-using System.Linq;
 
 namespace Inedo.Extensions.TeamCity.ListVariableSources
 {
     [DisplayName("TeamCity Build Configuration")]
     [Description("Build configurations in a specified project in a TeamCity instance.")]
-    public sealed class TeamCityBuildConfigurationVariableSource : ListVariableSource, IHasCredentials<TeamCityCredentials>
+    public sealed class TeamCityBuildConfigurationVariableSource : ListVariableSource
     {
         [Persistent]
-        [DisplayName("Credentials")]
-        [TriggerPostBackOnChange]
+        [DisplayName("From resource")]
+        [SuggestableValue(typeof(SecureResourceSuggestionProvider<TeamCitySecureResource>))]
         [Required]
-        public string CredentialName { get; set; }
+        public string ResourceName { get; set; }
 
         [Persistent]
         [DisplayName("Project name")]
@@ -30,17 +31,18 @@ namespace Inedo.Extensions.TeamCity.ListVariableSources
 
         public override async Task<IEnumerable<string>> EnumerateValuesAsync(ValueEnumerationContext context)
         {
-            var credentials = TeamCityCredentials.TryCreate(this.CredentialName, context);
-            if (credentials == null)
+            var rrContext = new CredentialResolutionContext(context.ProjectId, null);
+            var resource = SecureResource.TryCreate(this.ResourceName, rrContext) as TeamCitySecureResource;
+            if (resource == null)
                 return Enumerable.Empty<string>();
 
-            using (var client = new TeamCityWebClient(credentials))
+            using (var client = new TeamCityWebClient(resource, resource.GetCredentials(rrContext)))
             {
                 return await client.GetBuildTypeNamesAsync(this.ProjectName).ConfigureAwait(false);
             }
         }
 
         public override RichDescription GetDescription() =>
-            new RichDescription("TeamCity (", new Hilite(this.CredentialName), ") ", " build configurations in ", new Hilite(this.ProjectName), ".");
+            new RichDescription("TeamCity (", new Hilite(this.ResourceName), ") ", " build configurations in ", new Hilite(this.ProjectName), ".");
     }
 }

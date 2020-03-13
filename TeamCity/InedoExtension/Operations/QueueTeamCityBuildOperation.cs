@@ -16,10 +16,6 @@ namespace Inedo.Extensions.TeamCity.Operations
     {
         private TeamCityBuildQueuer buildQueuer;
 
-        [ScriptAlias("Credentials")]
-        [DisplayName("Credentials")]
-        public override string CredentialName { get; set; }
-
         [Required]
         [ScriptAlias("Project")]
         [DisplayName("Project name")]
@@ -61,7 +57,9 @@ namespace Inedo.Extensions.TeamCity.Operations
 
         public override async Task ExecuteAsync(IOperationExecutionContext context)
         {
-            this.buildQueuer = new TeamCityBuildQueuer((ITeamCityConnectionInfo)this, (ILogSink)this)
+            var (resource, client) = this.GetConnectionInfo(context);
+
+            this.buildQueuer = new TeamCityBuildQueuer(resource, client, (ILogSink)this)
             {
                 ProjectName = this.ProjectName,
                 BuildConfigurationId = this.BuildConfigurationId,

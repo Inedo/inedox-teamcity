@@ -62,6 +62,9 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
@@ -69,8 +72,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Credentials\TeamCityCredentials.cs" />
-    <Compile Include="ITeamCityConnectionInfo.cs" />
+    <Compile Include="Credentials\TeamCityLegacyResourceCredentials.cs" />
+    <Compile Include="Credentials\TeamCityAccountSecureCredentials.cs" />
+    <Compile Include="Credentials\TeamCitySecureResource.cs" />
+    <Compile Include="Credentials\TeamCityTokenSecureCredentials.cs" />
     <Compile Include="ListVariableSources\TeamCityBuildConfigurationVariableSource.cs" />
     <Compile Include="ListVariableSources\TeamCityBuildNumberVariableSource.cs" />
     <Compile Include="ListVariableSources\TeamCityProjectNameVariableSource.cs" />

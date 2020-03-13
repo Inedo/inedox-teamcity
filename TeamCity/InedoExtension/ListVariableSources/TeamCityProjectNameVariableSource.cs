@@ -5,33 +5,43 @@ using System.Threading.Tasks;
 using Inedo.Documentation;
 using Inedo.Extensibility.Credentials;
 using Inedo.Extensibility.ListVariableSources;
+using Inedo.Extensibility.SecureResources;
 using Inedo.Extensions.TeamCity.Credentials;
 using Inedo.Serialization;
+using Inedo.Web;
 
 namespace Inedo.Extensions.TeamCity.ListVariableSources
 {
     [DisplayName("TeamCity Project Name")]
     [Description("Project names from a specified TeamCity instance.")]
-    public sealed class TeamCityProjectNameVariableSource : ListVariableSource, IHasCredentials<TeamCityCredentials>
+    public sealed class TeamCityProjectNameVariableSource : ListVariableSource, IMissingPersistentPropertyHandler
     {
         [Persistent]
-        [DisplayName("Credentials")]
+        [DisplayName("From resource")]
+        [SuggestableValue(typeof(SecureResourceSuggestionProvider<TeamCitySecureResource>))]
         [Required]
-        public string CredentialName { get; set; }
-
+        public string ResourceName { get; set; }
+        
         public override async Task<IEnumerable<string>> EnumerateValuesAsync(ValueEnumerationContext context)
         {
-            var credentials = TeamCityCredentials.TryCreate(this.CredentialName, context);
-            if (credentials == null)
+            var rrContext = new CredentialResolutionContext(context.ProjectId, null);
+            var resource = SecureResource.TryCreate(this.ResourceName, rrContext) as TeamCitySecureResource;
+            if (resource == null)
                 return Enumerable.Empty<string>();
 
-            using (var client = new TeamCityWebClient(credentials))
+            using (var client = new TeamCityWebClient(resource, resource.GetCredentials(rrContext)))
             {
                 return await client.GetProjectNamesAsync().ConfigureAwait(false);
             }
         }
 
         public override RichDescription GetDescription() =>
-            new RichDescription("TeamCity (", new Hilite(this.CredentialName), ") ", " project names.");
+            new RichDescription("TeamCity (", new Hilite(this.ResourceName), ") ", " project names.");
+
+        void IMissingPersistentPropertyHandler.OnDeserializedMissingProperties(IReadOnlyDictionary<string, string> missingProperties)
+        {
+            if (missingProperties.ContainsKey("CredentialName"))
+                this.ResourceName = missingProperties["CredentialName"];
+        }
     }
 }
