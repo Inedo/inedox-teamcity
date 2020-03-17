@@ -35,7 +35,7 @@ namespace Inedo.Extensions.TeamCity
             {
                 this.Headers.Add(HttpRequestHeader.Authorization, "Bearer " + AH.Unprotect(tct.Token));
             }
-            else
+            else if (secureCredentials != null)
                 throw new ArgumentException(nameof(secureCredentials));
 
             this.BaseAddress = $"{resource.ServerUrl.TrimEnd('/')}/{(string.IsNullOrEmpty(userName) ? "guestAuth" : "httpAuth")}/";

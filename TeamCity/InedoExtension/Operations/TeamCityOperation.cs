@@ -12,11 +12,7 @@ namespace Inedo.Extensions.TeamCity.Operations
 {
     public abstract class TeamCityOperation : ExecuteOperation
     {
-        [DisplayName("From resource")]
-        [ScriptAlias("From")]
-        [ScriptAlias("Credentials")]
-        [SuggestableValue(typeof(SecureResourceSuggestionProvider<TeamCitySecureResource>))]
-        public string ResourceName { get; set; }
+        public abstract string ResourceName { get; set; }
 
         [Category("Connection/Identity")]
         [ScriptAlias("Server")]

@@ -38,17 +38,11 @@ namespace Inedo.Extensions.TeamCity.Credentials
 
         public override RichDescription GetDescription() => new RichDescription(string.IsNullOrEmpty(this.UserName) ? "Guest" : this.UserName);
 
-        internal static TeamCityLegacyResourceCredentials TryCreate(string name, ValueEnumerationContext context)
-        {
-            return (TeamCityLegacyResourceCredentials)ResourceCredentials.TryCreate(TeamCityLegacyResourceCredentials.TypeName, name, environmentId: null, applicationId: context.ProjectId, inheritFromParent: false);
-        }
+        public override SecureCredentials ToSecureCredentials() => 
+            string.IsNullOrEmpty(this.UserName) 
+                ? null 
+            : new TeamCityAccountSecureCredentials { UserName = this.UserName, Password = this.Password };
 
-        internal static TeamCityLegacyResourceCredentials TryCreate(string name, IComponentConfiguration config)
-        {
-            int? projectId = (config.EditorContext as IOperationEditorContext)?.ProjectId ?? AH.ParseInt(AH.CoalesceString(config["ProjectId"], config["ApplicationId"]));
-            int? environmentId = AH.ParseInt(config["EnvironmentId"]);
-
-            return (TeamCityLegacyResourceCredentials)ResourceCredentials.TryCreate(TeamCityLegacyResourceCredentials.TypeName, name, environmentId: environmentId, applicationId: projectId, inheritFromParent: false);
-        }
+        public override SecureResource ToSecureResource() => new TeamCitySecureResource { ServerUrl = this.ServerUrl };
     }
 }

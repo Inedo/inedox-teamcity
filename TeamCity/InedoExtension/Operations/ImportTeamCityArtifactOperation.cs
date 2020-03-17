@@ -5,6 +5,7 @@ using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Operations;
+using Inedo.Extensions.TeamCity.Credentials;
 using Inedo.Extensions.TeamCity.Operations;
 using Inedo.Extensions.TeamCity.SuggestionProviders;
 using Inedo.Web;
@@ -18,6 +19,12 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations
     [Tag("teamcity")]
     public sealed class ImportTeamCityArtifactOperation : TeamCityOperation
     {
+        [DisplayName("From resource")]
+        [ScriptAlias("From")]
+        [ScriptAlias("Credentials")]
+        [SuggestableValue(typeof(SecureResourceSuggestionProvider<TeamCitySecureResource>))]
+        public override string ResourceName { get; set; }
+
         [ScriptAlias("Project")]
         [DisplayName("Project name")]
         [SuggestableValue(typeof(ProjectNameSuggestionProvider))]

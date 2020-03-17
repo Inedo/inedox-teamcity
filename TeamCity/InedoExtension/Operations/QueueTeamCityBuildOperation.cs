@@ -4,6 +4,7 @@ using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Operations;
+using Inedo.Extensions.TeamCity.Credentials;
 using Inedo.Extensions.TeamCity.SuggestionProviders;
 using Inedo.Web;
 
@@ -15,7 +16,11 @@ namespace Inedo.Extensions.TeamCity.Operations
     public sealed class QueueTeamCityBuildOperation : TeamCityOperation
     {
         private TeamCityBuildQueuer buildQueuer;
-
+        [DisplayName("From resource")]
+        [ScriptAlias("From")]
+        [ScriptAlias("Credentials")]
+        [SuggestableValue(typeof(SecureResourceSuggestionProvider<TeamCitySecureResource>))]
+        public override string ResourceName { get; set; }
         [Required]
         [ScriptAlias("Project")]
         [DisplayName("Project name")]
