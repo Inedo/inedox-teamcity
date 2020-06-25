@@ -132,11 +132,11 @@ namespace Inedo.BuildMasterExtensions.TeamCity
             string apiUrl = this.TryGetPredefinedConstantBuildNumberApiUrl(this.BuildNumber);
             if (apiUrl == null)
             {
-                this.Logger.LogDebug("Using explicit build number: {0}", this.BuildNumber);
+                this.Logger.LogDebug($"Using explicit build number: {this.BuildNumber}");
                 return this.BuildNumber;
             }
 
-            this.Logger.LogDebug("Build number is the predefined constant \"{0}\", resolving...", this.BuildNumber);
+            this.Logger.LogDebug("Build number is the predefined constant \"{this.BuildNumber}\", resolving...");
 
             try
             {

@@ -53,7 +53,7 @@ namespace Inedo.Extensions.TeamCity
 
             using (var client = new TeamCityWebClient(this.resource, this.credentials))
             {
-                this.Logger.LogDebug("Triggering build configuration {0}...", this.BuildConfigurationId);
+                this.Logger.LogDebug($"Triggering build configuration {this.BuildConfigurationId}...");
                 if (this.BranchName != null)
                     this.Logger.LogDebug("Using branch: " + this.BranchName);
 
@@ -87,7 +87,7 @@ namespace Inedo.Extensions.TeamCity
                 string response = await client.UploadStringTaskAsync("app/rest/buildQueue", xdoc.ToString(SaveOptions.DisableFormatting)).ConfigureAwait(false);
                 var status = new TeamCityBuildStatus(response);
 
-                this.Logger.LogInformation("Build of {0} was triggered successfully.", this.BuildConfigurationId);
+                this.Logger.LogInformation($"Build of {this.BuildConfigurationId} was triggered successfully.");
 
                 if (!this.WaitForCompletion)
                     return status;
