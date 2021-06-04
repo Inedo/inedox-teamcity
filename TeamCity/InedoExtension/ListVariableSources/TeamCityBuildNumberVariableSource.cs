@@ -4,8 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Inedo.Documentation;
 using Inedo.Extensibility.Credentials;
-using Inedo.Extensibility.ListVariableSources;
 using Inedo.Extensibility.SecureResources;
+using Inedo.Extensibility.VariableTemplates;
 using Inedo.Extensions.TeamCity.Credentials;
 using Inedo.Extensions.TeamCity.SuggestionProviders;
 using Inedo.Serialization;
@@ -15,7 +15,7 @@ namespace Inedo.Extensions.TeamCity.ListVariableSources
 {
     [DisplayName("TeamCity Build Number")]
     [Description("Build numbers from a specified build configuration in a TeamCity instance.")]
-    public sealed class TeamCityBuildNumberVariableSource : ListVariableSource
+    public sealed class TeamCityBuildNumberVariableSource : DynamicListVariableType
     {
         [Persistent]
         [DisplayName("From resource")]
@@ -36,7 +36,7 @@ namespace Inedo.Extensions.TeamCity.ListVariableSources
         public string BuildConfigurationName { get; set; }
 
 
-        public override async Task<IEnumerable<string>> EnumerateValuesAsync(ValueEnumerationContext context)
+        public override async Task<IEnumerable<string>> EnumerateListValuesAsync(VariableTemplateContext context)
         {
             var rrContext = new CredentialResolutionContext(context.ProjectId, null);
             var resource = SecureResource.TryCreate(this.ResourceName, rrContext) as TeamCitySecureResource;
