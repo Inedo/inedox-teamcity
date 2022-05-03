@@ -47,9 +47,7 @@ namespace Inedo.Extensions.TeamCity.Operations
                 resource = SecureResource.TryCreate(this.ResourceName, context as IResourceResolutionContext) as TeamCitySecureResource;
                 if (resource == null)
                 {
-                    var legacy = ResourceCredentials.TryCreate<TeamCityLegacyResourceCredentials>(this.ResourceName);
-                    resource = legacy?.ToSecureResource() as TeamCitySecureResource;
-                    credentials = legacy?.ToSecureCredentials();
+                    credentials = null;
                 }
             }
             if (!string.IsNullOrEmpty(this.CredentialName))

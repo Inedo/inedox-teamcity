@@ -26,11 +26,6 @@ namespace Inedo.Extensions.TeamCity
                 userName = asc.UserName;
                 password = AH.Unprotect(asc.Password);
             }
-            else if (secureCredentials is TeamCityLegacyResourceCredentials lrc)
-            {
-                userName = lrc.UserName;
-                password = AH.Unprotect(lrc.Password);
-            }
             else if (secureCredentials is TeamCityTokenSecureCredentials tct)
             {
                 this.Headers.Add(HttpRequestHeader.Authorization, "Bearer " + AH.Unprotect(tct.Token));
