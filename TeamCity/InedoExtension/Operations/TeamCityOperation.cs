@@ -7,66 +7,62 @@ using Inedo.Extensibility.Operations;
 using Inedo.Web;
 using System.Security;
 using Inedo.Extensibility.SecureResources;
+using Inedo.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
-namespace Inedo.Extensions.TeamCity.Operations
+namespace Inedo.Extensions.TeamCity.Operations;
+
+public abstract class TeamCityOperation : ExecuteOperation
 {
-    public abstract class TeamCityOperation : ExecuteOperation
+    public abstract string? ResourceName { get; set; }
+    public abstract string? ProjectName { get; set; }
+    public abstract string? BuildConfigurationName { get; set; }
+
+    [Category("Connection/Identity")]
+    [DisplayName("Credentials")]
+    [ScriptAlias("CredentialName")]
+    [PlaceholderText("Use credential from resource")]
+    public string? CredentialName { get; set; }
+    [Category("Connection/Identity")]
+    [ScriptAlias("Server")]
+    [PlaceholderText("Use server URL from credential")]
+    [DisplayName("TeamCity server URL")]
+    public string? ServerUrl { get; set; }
+    [Category("Connection/Identity")]
+    [ScriptAlias("Token"), ScriptAlias("Password", Obsolete = true)]
+    [DisplayName("Token")]
+    [PlaceholderText("Use token from credential")]
+    public SecureString? Password { get; set; }
+
+    [Undisclosed]
+    [ScriptAlias("UserName", Obsolete = true)]
+    public string? UserName { get; set; }
+
+    internal bool TryCreateClient(IOperationExecutionContext context, [NotNullWhen(true)] out TeamCityClient? client)
     {
-        public abstract string ResourceName { get; set; }
+        var project = SecureResource.TryCreate(this.ResourceName, context) as TeamCityProject;
 
-        [Category("Connection/Identity")]
-        [ScriptAlias("Server")]
-        [DisplayName("TeamCity server URL")]
-        public string ServerUrl { get; set; }
+        var credentialName = this.CredentialName ?? project?.CredentialName;
 
-        [Category("Connection/Identity")]
-        [DisplayName("Credentials")]
-        [ScriptAlias("CredentialName")]
-        [PlaceholderText("Use credential from resource")]
-        public string CredentialName { get; set; }
+        if (!TeamCityCredentials.TryCreateFromCredentialName(credentialName, context, out var credentials))
+            credentials = new();
 
-        [Category("Connection/Identity")]
-        [ScriptAlias("UserName")]
-        [DisplayName("User name")]
-        [PlaceholderText("Use user name from credential")]
-        public string UserName { get; set; }
-
-        [Category("Connection/Identity")]
-        [ScriptAlias("Password")]
-        [DisplayName("Password")]
-        [PlaceholderText("Use password from credential")]
-        public string Password { get; set; }
-
-        protected (TeamCitySecureResource resource, SecureCredentials secureCredentials) GetConnectionInfo(IOperationExecutionContext context)
+        if (!string.IsNullOrEmpty(this.UserName) || !string.IsNullOrEmpty(credentials.LegacyUserName))
         {
-            TeamCitySecureResource resource = null;  
-            SecureCredentials credentials = null;
-            
-            if (!string.IsNullOrEmpty(this.ResourceName))
-            {
-                resource = SecureResource.TryCreate(this.ResourceName, context as IResourceResolutionContext) as TeamCitySecureResource;
-                if (resource == null)
-                {
-                    credentials = null;
-                }
-            }
-            if (!string.IsNullOrEmpty(this.CredentialName))
-            {
-                credentials = SecureCredentials.TryCreate(this.CredentialName, context as ICredentialResolutionContext) as SecureCredentials;
-            }
-            if (!string.IsNullOrEmpty(this.UserName) && !string.IsNullOrEmpty(this.Password))
-            {
-                credentials = new TeamCityAccountSecureCredentials
-                {
-                    UserName = this.UserName,
-                    Password = AH.CreateSecureString(this.Password)
-                };
-            }
-
-            return (new TeamCitySecureResource()
-            {
-                ServerUrl = AH.CoalesceString(this.ServerUrl, resource?.ServerUrl)
-            }, credentials);
+            client = null;
+            this.LogWarning("A UserName was specified for TeamCity, which is no longer supported; you'll need to switch to API Tokens.");
+            return false;
         }
+        credentials.Password = this.Password ?? credentials.Password;
+        credentials.ServiceUrl = this.ServerUrl ?? credentials.ServiceUrl ?? project?.LegacyServerUrl;
+        if (string.IsNullOrEmpty(credentials.ServiceUrl))
+        {
+            client = null;
+            this.LogWarning("A ServiceUrl was not specified for TeamCity.");
+            return false;
+        }
+
+        client = new TeamCityClient(credentials, this);
+        return true;
     }
 }

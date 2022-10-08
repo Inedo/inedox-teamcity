@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
+using Inedo.ExecutionEngine.Executer;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Operations;
 using Inedo.Extensions.TeamCity.Credentials;
@@ -10,94 +13,102 @@ using Inedo.Extensions.TeamCity.Operations;
 using Inedo.Extensions.TeamCity.SuggestionProviders;
 using Inedo.Web;
 
-namespace Inedo.BuildMasterExtensions.TeamCity.Operations
+namespace Inedo.BuildMasterExtensions.TeamCity.Operations;
+
+[DisplayName("Import Artifact from TeamCity")]
+[Description("Downloads an artifact from the specified TeamCity server and saves it to the artifact library.")]
+[ScriptAlias("Import-Artifact")]
+[Tag("artifacts")]
+[Tag("teamcity")]
+public sealed class ImportTeamCityArtifactOperation : TeamCityOperation
 {
-    [DisplayName("Import Artifact from TeamCity")]
-    [Description("Downloads an artifact from the specified TeamCity server and saves it to the artifact library.")]
-    [ScriptAlias("Import-Artifact")]
-    [Tag("artifacts")]
-    [Tag("teamcity")]
-    public sealed class ImportTeamCityArtifactOperation : TeamCityOperation
+    [ScriptAlias("From")]
+    [DisplayName("TeamCity resource")]
+    [DefaultValue("$CIProject")]
+    [SuggestableValue(typeof(SecureResourceSuggestionProvider<TeamCityProject>))]
+    public override string? ResourceName { get; set; }
+    [ScriptAlias("Project"), ScriptAlias("Job", Obsolete = true)]
+    [DisplayName("Project name")]
+    [DefaultValue("$TeamCityProjectName($CIProject)")]
+    [SuggestableValue(typeof(ProjectNameSuggestionProvider))]
+    public override string? ProjectName { get; set; }
+    [ScriptAlias("BuildConfiguration")]
+    [DisplayName("Build configuration")]
+    [DefaultValue("$TeamCityBuildConfigurationName($CIBuild)")]
+    [SuggestableValue(typeof(BuildConfigurationNameSuggestionProvider))]
+    public override string? BuildConfigurationName { get; set; }
+    [ScriptAlias("BuildNumber")]
+    [DisplayName("Build number")]
+    [DefaultValue("$TeamCityBuildNumber($CIBuild)")]
+    [Description("The build number may be a specific build number, or a special value such as \"lastSuccessful\", \"lastFinished\", or \"lastPinned\". "
+        + "To specify a build ID instead, append ':id' as a suffix, e.g. 1234:id")]
+    [SuggestableValue(typeof(BuildNumberSuggestionProvider))]
+    public string? BuildNumber { get; set; }
+
+    [Category("Advanced")]
+    [ScriptAlias("Artifact")]
+    [DisplayName("BuildMaster artifact name")]
+    [DefaultValue("Default"), NotNull]
+    [Description("The name of the artifact in BuildMaster to create after artifacts are downloaded from Jenkins.")]
+    public string? ArtifactName { get; set; }
+    [Category("Advanced")]
+    [ScriptAlias("Include")]
+    [DisplayName("Include files")]
+    [DefaultValue("**")]
+    [Description(CommonDescriptions.MaskingHelp)]
+    public IEnumerable<string>? Includes { get; set; }
+    [Category("Advanced")]
+    [ScriptAlias("Exclude")]
+    [DisplayName("Exclude files")]
+    [Description(CommonDescriptions.MaskingHelp)]
+    public IEnumerable<string>? Excludes { get; set; }
+    [Category("Advanced")]
+    [ScriptAlias("Branch")]
+    [DisplayName("Branch filter")]
+    [Description("When the build number is a special value such as \"lastSuccesful\", this will be used to find that build")]
+    public string? BranchName { get; set; }
+    [Output]
+    [Category("Advanced")]
+    [ScriptAlias("TeamCityBuildNumber")]
+    [DisplayName("Actual build number (output)")]
+    [PlaceholderText("e.g. $ActualBuildNumber")]
+    [Description("When you specify a Build Number like \"lastSuccessful\", this will output the real TeamCity BuildNumber into a runtime variable.")]
+    public string? TeamCityBuildNumber { get; set; }
+
+
+    [Undisclosed]
+    [ScriptAlias("BuildConfigurationId", Obsolete = true)]
+    public string? BuildConfigurationId { get; set; }
+
+    public async override Task ExecuteAsync(IOperationExecutionContext context)
     {
-        [DisplayName("From resource")]
-        [ScriptAlias("From")]
-        [ScriptAlias("Credentials")]
-        [SuggestableValue(typeof(SecureResourceSuggestionProvider<TeamCitySecureResource>))]
-        public override string ResourceName { get; set; }
+        if (this.BuildConfigurationId == null)
+            this.LogWarning($"Specifying BuildConfigurationId is no longer supported, and the property value of \"{this.BuildConfigurationId}\" will be ignored. Use BuildConfigurationName instead.");
 
-        [ScriptAlias("Project")]
-        [DisplayName("Project name")]
-        [SuggestableValue(typeof(ProjectNameSuggestionProvider))]
-        public string ProjectName { get; set; }
-        [ScriptAlias("BuildConfiguration")]
-        [DisplayName("Build configuration")]
-        [SuggestableValue(typeof(BuildConfigurationNameSuggestionProvider))]
-        public string BuildConfigurationName { get; set; }
+        if (this.ProjectName == null)
+            throw new ExecutionFailureException($"No TeamCity project was specified, and there is no CI build associated with this execution.");
+        if (this.BuildNumber == null)
+            throw new ExecutionFailureException($"No TeamCity build was specified, and there is no CI build associated with this execution.");
+        if (!this.TryCreateClient(context, out var client))
+            throw new ExecutionFailureException($"Could not create a connection to Jenkins resource \"{AH.CoalesceString(this.ResourceName, this.ServerUrl)}\".");
 
-        [ScriptAlias("BuildConfigurationId")]
-        [DisplayName("Build configuration ID")]
-        [Description("TeamCity identifier that targets a single build configuration. May be specified instead of the Project name and Build configuration name.")]
-        public string BuildConfigurationId { get; set; }
+#warning Implement Importing
+        throw new NotImplementedException();
+    }
 
-        [ScriptAlias("BuildNumber")]
-        [DisplayName("Build number")]
-        [DefaultValue("lastSuccessful")]
-        [PlaceholderText("lastSuccessful")]
-        [Description("The build number may be a specific build number, or a special value such as \"lastSuccessful\", \"lastFinished\", or \"lastPinned\". " 
-            + "To specify a build ID instead, append ':id' as a suffix, e.g. 1234:id")]
-        [SuggestableValue(typeof(BuildNumberSuggestionProvider))]
-        public string BuildNumber { get; set; }
-        [Required]
-        [ScriptAlias("Artifact")]
-        [DisplayName("Artifact name")]
-        public string ArtifactName { get; set; }
-        [ScriptAlias("Branch")]
-        [DisplayName("Branch")]
-        [PlaceholderText("Default")]
-        public string BranchName { get; set; }
-        [Output]
-        [ScriptAlias("TeamCityBuildNumber")]
-        [DisplayName("Set build number to variable")]
-        [Description("The TeamCity build number can be output into a runtime variable")]
-        [PlaceholderText("e.g. $TeamCityBuildNumber")]
-        public string TeamCityBuildNumber { get; set; }
-
-        public async override Task ExecuteAsync(IOperationExecutionContext context)
-        {
-            var (resource, client) = this.GetConnectionInfo(context);
-
-            var importer = new TeamCityArtifactImporter(resource, client, this, context)
-            {
-                ArtifactName = this.ArtifactName,
-                ProjectName = this.ProjectName,
-                BuildConfigurationId = this.BuildConfigurationId,
-                BuildConfigurationName = this.BuildConfigurationName,
-                BranchName = this.BranchName,
-                BuildNumber = this.BuildNumber
-            };
-
-            this.TeamCityBuildNumber = await importer.ImportAsync().ConfigureAwait(false);
-
-            this.LogInformation($"TeamCity build number \"{this.TeamCityBuildNumber}\" imported.");
-        }
-
-        protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
-        {
-            string buildNumber = config[nameof(this.BuildNumber)];
-            string branchName = config[nameof(this.BranchName)];
-
-            return new ExtendedRichDescription(
-                new RichDescription("Import TeamCity ", new Hilite(config[nameof(this.ArtifactName)]), " Artifact "),
-                new RichDescription("of build ",
-                    AH.ParseInt(buildNumber) != null ? "#" : "",
-                    new Hilite(buildNumber),
-                    !string.IsNullOrEmpty(branchName) ? " on branch " + branchName : "",
-                    " of project ", 
-                    new Hilite(config[nameof(this.ProjectName)]),
-                    " using configuration \"",
-                    config[nameof(this.BuildConfigurationName)]
-                )
-            );
-        }
+    protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
+    {
+        string buildNumber = config[nameof(this.BuildNumber)];
+        return new ExtendedRichDescription(
+            new RichDescription("Import TeamCity ", new Hilite(config[nameof(this.ArtifactName)]), " Artifact "),
+            new RichDescription("of build ",
+                AH.ParseInt(buildNumber) != null ? "#" : "",
+                new Hilite(buildNumber),
+                " of project ", 
+                new Hilite(config[nameof(this.ProjectName)]),
+                " using configuration \"",
+                config[nameof(this.BuildConfigurationName)]
+            )
+        );
     }
 }
