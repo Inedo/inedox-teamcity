@@ -25,7 +25,6 @@ public sealed class TeamCityProject : CIProject<TeamCityCredentials>, IMissingPe
     [Description("In earlier versions, the TeamCity server URL was specified on the project. This should not be used going forward.")]
     public string? LegacyServerUrl { get; set; }
 
-#warning deal with ProjectName
     [Persistent]
     [SuggestableValue(typeof(ProjectNameSuggestionProvider))]
     [DisplayName("[Obsolete] Project name")]

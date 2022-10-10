@@ -1,14 +1,12 @@
 ﻿using System.ComponentModel;
-using Inedo.Extensions.TeamCity.Credentials;
+using System.Diagnostics.CodeAnalysis;
+using System.Security;
+using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility;
-using Inedo.Extensibility.Credentials;
 using Inedo.Extensibility.Operations;
-using Inedo.Web;
-using System.Security;
 using Inedo.Extensibility.SecureResources;
-using Inedo.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
+using Inedo.Extensions.TeamCity.Credentials;
 
 namespace Inedo.Extensions.TeamCity.Operations;
 
@@ -34,7 +32,6 @@ public abstract class TeamCityOperation : ExecuteOperation
     [PlaceholderText("Use token from credential")]
     public SecureString? Password { get; set; }
 
-    [Undisclosed]
     [ScriptAlias("UserName", Obsolete = true)]
     public string? UserName { get; set; }
 
@@ -53,6 +50,7 @@ public abstract class TeamCityOperation : ExecuteOperation
             this.LogWarning("A UserName was specified for TeamCity, which is no longer supported; you'll need to switch to API Tokens.");
             return false;
         }
+
         credentials.Password = this.Password ?? credentials.Password;
         credentials.ServiceUrl = this.ServerUrl ?? credentials.ServiceUrl ?? project?.LegacyServerUrl;
         if (string.IsNullOrEmpty(credentials.ServiceUrl))

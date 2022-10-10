@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.ExecutionEngine.Executer;
@@ -94,16 +91,29 @@ public sealed class QueueTeamCityBuildOperation : TeamCityOperation
             this.LogWarning($"Specifying BuildConfigurationId is no longer supported, and the property value of \"{this.BuildConfigurationId}\" will be ignored. Use BuildConfigurationName instead.");
 
         if (this.ProjectName == null)
-            throw new ExecutionFailureException($"No TeamCity project was specified, and there is no CI build associated with this execution.");
+            throw new ExecutionFailureException("No TeamCity project was specified, and there is no CI build associated with this execution.");
         if (this.BuildNumber == null)
-            throw new ExecutionFailureException($"No TeamCity build was specified, and there is no CI build associated with this execution.");
+            throw new ExecutionFailureException("No TeamCity build was specified, and there is no CI build associated with this execution.");
         if (!this.TryCreateClient(context, out var client))
-            throw new ExecutionFailureException($"Could not create a connection to Jenkins resource \"{AH.CoalesceString(this.ResourceName, this.ServerUrl)}\".");
+            throw new ExecutionFailureException($"Could not create a connection to TeamCity resource \"{AH.CoalesceString(this.ResourceName, this.ServerUrl)}\".");
 
-#warning Implement Queing
-        throw new NotImplementedException();
+        var configName = this.BuildConfigurationName;
+        string? configId = this.BuildConfigurationId;
+        if (string.IsNullOrEmpty(configId))
+        {
+            await foreach (var t in client.GetProjectBuildTypesAsync(this.ProjectName, context.CancellationToken))
+            {
+                if (string.IsNullOrEmpty(configName) || configName.Equals(t.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    configId = t.Id;
+                    configName = t.Name;
+                    break;
+                }
+            }
+        }
+
+        await client.QueueBuildAsync(configId!, this.BranchName, context.CancellationToken);
     }
-
 
     protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
     {

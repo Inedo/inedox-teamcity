@@ -3,8 +3,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Inedo.Documentation;
-using Inedo.Extensibility.Credentials;
-using Inedo.Extensibility.SecureResources;
 using Inedo.Extensibility.VariableTemplates;
 using Inedo.Extensions.TeamCity.Credentials;
 using Inedo.Extensions.TeamCity.SuggestionProviders;
@@ -34,11 +32,18 @@ public sealed class TeamCityBuildConfigurationVariableSource : DynamicListVariab
         if (!TeamCityCredentials.TryCreateFromResourceName(this.ResourceName, context, out var credentials))
             return Enumerable.Empty<string>();
 
-#warning Look-up ProjectId?
-        var list = await new TeamCityClient(credentials).GetProjectBuildTypesAsync(this.ProjectName!).Select(b => b.Name).ToListAsync().ConfigureAwait(false);
-        return list.AsEnumerable();
+        if (string.IsNullOrEmpty(this.ProjectName))
+            return Enumerable.Empty<string>();
+
+        var list = new List<string>();
+        await foreach (var p in new TeamCityClient(credentials).GetProjectBuildTypesAsync(this.ProjectName).ConfigureAwait(false))
+            list.Add(p.Name);
+
+        return list;
     }
 
-    public override RichDescription GetDescription() =>
-        new RichDescription("TeamCity (", new Hilite(this.ResourceName), ") ", " build configurations in ", new Hilite(this.ProjectName), ".");
+    public override RichDescription GetDescription()
+    {
+        return new RichDescription("TeamCity (", new Hilite(this.ResourceName), ") ", " build configurations in ", new Hilite(this.ProjectName), ".");
+    }
 }

@@ -1,30 +1,20 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Inedo.Extensibility;
-using Inedo.Extensibility.Credentials;
-using Inedo.Extensibility.SecureResources;
-using Inedo.Extensions.TeamCity.Credentials;
-using Inedo.Web;
 
 namespace Inedo.Extensions.TeamCity.SuggestionProviders;
 
-internal class BuildConfigurationNameSuggestionProvider : ISuggestionProvider
+internal sealed class BuildConfigurationNameSuggestionProvider : TeamCitySuggestionProvider
 {
-    public async Task<IEnumerable<string>> GetSuggestionsAsync(IComponentConfiguration config)
+    protected override async IAsyncEnumerable<string> GetSuggestionsAsync(TeamCityClient client, IComponentConfiguration config, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var resourceName = config["ResourceName"];
-        if (string.IsNullOrEmpty(resourceName))
-            return Enumerable.Empty<string>();
-
         var projectName = config["ProjectName"];
         if (string.IsNullOrEmpty(projectName))
-            return Enumerable.Empty<string>();
+            yield break;
 
-        if (!TeamCityCredentials.TryCreateFromResourceName(resourceName, config.EditorContext as ICredentialResolutionContext, out var credentials))
-            return Enumerable.Empty<string>();
-#warning Look-up ProjectId?
-        var list = await new TeamCityClient(credentials).GetProjectBuildTypesAsync(projectName).Select(b => b.Name).ToListAsync().ConfigureAwait(false);
-        return list.AsEnumerable();
+        await foreach (var p in client.GetProjectBuildTypesAsync(projectName, cancellationToken).ConfigureAwait(false))
+            yield return p.Name;
     }
 }

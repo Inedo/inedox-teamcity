@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Threading.Tasks;
 using Inedo.Documentation;
 using Inedo.Extensibility.VariableTemplates;
@@ -33,24 +32,21 @@ public sealed class TeamCityBuildNumberVariableSource : DynamicListVariableType
     [Required]
     public string? BuildConfigurationName { get; set; }
 
-
     public override async Task<IEnumerable<string>> EnumerateListValuesAsync(VariableTemplateContext context)
     {
-        if (!TeamCityCredentials.TryCreateFromResourceName(this.ResourceName, context, out var credentials))
-            return TeamCityClient.builtInTypes.AsEnumerable();
+        var list = new List<string>(TeamCityClient.BuiltInTypes);
 
-        try
+        if (!string.IsNullOrEmpty(this.ProjectName) && TeamCityCredentials.TryCreateFromResourceName(this.ResourceName, context, out var credentials))
         {
-#warning Look-up ProjectId?
-            var list = await new TeamCityClient(credentials).GetBuildsAsync(this.ProjectName!).Select(s => s.Number).ToListAsync().ConfigureAwait(false);
-            return TeamCityClient.builtInTypes.Concat(list.AsEnumerable());
+            await foreach (var p in new TeamCityClient(credentials).GetBuildsAsync(this.ProjectName).ConfigureAwait(false))
+                list.Add(p.Number);
         }
-        catch
-        {
-            return TeamCityClient.builtInTypes.AsEnumerable();
-        }
+
+        return list;
     }
 
-    public override RichDescription GetDescription() =>
-        new RichDescription("TeamCity (", new Hilite(this.ResourceName), ") ", " builds for ", new Hilite(this.BuildConfigurationName), " in ", new Hilite(this.ProjectName), ".");
+    public override RichDescription GetDescription()
+    {
+        return new RichDescription("TeamCity (", new Hilite(this.ResourceName), ") ", " builds for ", new Hilite(this.BuildConfigurationName), " in ", new Hilite(this.ProjectName), ".");
+    }
 }

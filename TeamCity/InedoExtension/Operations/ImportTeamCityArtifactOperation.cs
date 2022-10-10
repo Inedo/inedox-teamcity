@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
+using System.IO.Compression;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.ExecutionEngine.Executer;
@@ -11,6 +8,7 @@ using Inedo.Extensibility.Operations;
 using Inedo.Extensions.TeamCity.Credentials;
 using Inedo.Extensions.TeamCity.Operations;
 using Inedo.Extensions.TeamCity.SuggestionProviders;
+using Inedo.IO;
 using Inedo.Web;
 
 namespace Inedo.BuildMasterExtensions.TeamCity.Operations;
@@ -48,8 +46,8 @@ public sealed class ImportTeamCityArtifactOperation : TeamCityOperation
     [Category("Advanced")]
     [ScriptAlias("Artifact")]
     [DisplayName("BuildMaster artifact name")]
-    [DefaultValue("Default"), NotNull]
-    [Description("The name of the artifact in BuildMaster to create after artifacts are downloaded from Jenkins.")]
+    [DefaultValue("Default")]
+    [Description("The name of the artifact in BuildMaster to create after artifacts are downloaded from TeamCity.")]
     public string? ArtifactName { get; set; }
     [Category("Advanced")]
     [ScriptAlias("Include")]
@@ -75,8 +73,6 @@ public sealed class ImportTeamCityArtifactOperation : TeamCityOperation
     [Description("When you specify a Build Number like \"lastSuccessful\", this will output the real TeamCity BuildNumber into a runtime variable.")]
     public string? TeamCityBuildNumber { get; set; }
 
-
-    [Undisclosed]
     [ScriptAlias("BuildConfigurationId", Obsolete = true)]
     public string? BuildConfigurationId { get; set; }
 
@@ -85,15 +81,52 @@ public sealed class ImportTeamCityArtifactOperation : TeamCityOperation
         if (this.BuildConfigurationId == null)
             this.LogWarning($"Specifying BuildConfigurationId is no longer supported, and the property value of \"{this.BuildConfigurationId}\" will be ignored. Use BuildConfigurationName instead.");
 
+        if (string.IsNullOrEmpty(this.ArtifactName))
+            throw new ExecutionFailureException("ArtifactName was not specified.");
         if (this.ProjectName == null)
-            throw new ExecutionFailureException($"No TeamCity project was specified, and there is no CI build associated with this execution.");
+            throw new ExecutionFailureException("No TeamCity project was specified, and there is no CI build associated with this execution.");
         if (this.BuildNumber == null)
-            throw new ExecutionFailureException($"No TeamCity build was specified, and there is no CI build associated with this execution.");
+            throw new ExecutionFailureException("No TeamCity build was specified, and there is no CI build associated with this execution.");
         if (!this.TryCreateClient(context, out var client))
             throw new ExecutionFailureException($"Could not create a connection to Jenkins resource \"{AH.CoalesceString(this.ResourceName, this.ServerUrl)}\".");
 
-#warning Implement Importing
-        throw new NotImplementedException();
+        var configName = this.BuildConfigurationName;
+        string? configId = this.BuildConfigurationId;
+        if (string.IsNullOrEmpty(configId))
+        {
+            await foreach (var t in client.GetProjectBuildTypesAsync(this.ProjectName, context.CancellationToken))
+            {
+                if (string.IsNullOrEmpty(configName) || configName.Equals(t.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    configId = t.Id;
+                    configName = t.Name;
+                    break;
+                }
+            }
+        }
+
+        using var zipStream = await client.DownloadArtifactsAsync(configId!, this.BuildNumber, context.CancellationToken);
+        var mask = new MaskingContext(this.Includes, this.Excludes);
+        if (!mask.MatchAll)
+        {
+            using (var zip = new ZipArchive(zipStream, ZipArchiveMode.Update, true))
+            {
+                var deletes = new List<ZipArchiveEntry>();
+
+                foreach (var entry in zip.Entries)
+                {
+                    if (!mask.IsMatch(entry.FullName))
+                        deletes.Add(entry);
+                }
+
+                foreach (var entry in deletes)
+                    entry.Delete();
+            }
+
+            zipStream.Position = 0;
+        }
+
+        await context.CreateBuildMasterArtifactAsync(this.ArtifactName, zipStream, false, context.CancellationToken);
     }
 
     protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
