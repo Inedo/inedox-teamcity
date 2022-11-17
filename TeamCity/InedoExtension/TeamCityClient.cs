@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using Inedo.Diagnostics;
@@ -150,6 +143,26 @@ internal sealed class TeamCityClient
         await stream.CopyToAsync(temp, cancellationToken).ConfigureAwait(false);
         temp.Position = 0;
         return temp;
+    }
+    public static void ParseBuildId(string buildId, out string? branchName, out int buildNumber)
+    {
+        int hyphenIndex = buildId.LastIndexOf('-');
+        int? myMaybeBuildNumber;
+        if (hyphenIndex < 0)
+        {
+            branchName = null;
+            myMaybeBuildNumber = AH.ParseInt(buildId);
+        }
+        else
+        {
+            branchName = buildId[..hyphenIndex];
+            myMaybeBuildNumber = AH.ParseInt(buildId[(hyphenIndex + 1)..]);
+        }
+
+        if (myMaybeBuildNumber == null)
+            throw new FormatException($"{nameof(buildId)} has an unexpected format (\"{buildId}\").");
+
+        buildNumber = myMaybeBuildNumber.Value;
     }
 
     private async Task<XDocument> GetXDocumentAsync(string url, CancellationToken cancellationToken)

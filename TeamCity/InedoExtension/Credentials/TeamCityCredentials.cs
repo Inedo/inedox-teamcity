@@ -1,9 +1,6 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Security;
-using System.Threading;
-using System.Threading.Tasks;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.Extensibility.CIServers;
@@ -21,7 +18,7 @@ namespace Inedo.Extensions.TeamCity.Credentials;
 [PersistFrom("Inedo.Extensions.TeamCity.Credentials.TeamCityLegacyResourceCredentials,TeamCity")]
 [PersistFrom("Inedo.Extensions.TeamCity.Credentials.TeamCityAccountSecureCredentials,TeamCity")]
 [PersistFrom("Inedo.Extensions.TeamCity.Credentials.TeamCityTokenSecureCredentials,TeamCity")]
-public sealed class TeamCityCredentials : CIServiceCredentials, IMissingPersistentPropertyHandler
+public sealed class TeamCityCredentials : CIServiceCredentials<TeamCityService>, IMissingPersistentPropertyHandler
 {
     public string? LegacyUserName;
 

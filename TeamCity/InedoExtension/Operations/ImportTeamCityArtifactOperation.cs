@@ -5,6 +5,7 @@ using Inedo.Documentation;
 using Inedo.ExecutionEngine.Executer;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Operations;
+using Inedo.Extensions.TeamCity;
 using Inedo.Extensions.TeamCity.Credentials;
 using Inedo.Extensions.TeamCity.Operations;
 using Inedo.Extensions.TeamCity.SuggestionProviders;
@@ -18,7 +19,7 @@ namespace Inedo.BuildMasterExtensions.TeamCity.Operations;
 [ScriptAlias("Import-Artifact")]
 [Tag("artifacts")]
 [Tag("teamcity")]
-public sealed class ImportTeamCityArtifactOperation : TeamCityOperation
+public sealed class ImportTeamCityArtifactOperation : TeamCityOperation, IImportCIArtifactsOperation
 {
     [ScriptAlias("From")]
     [DisplayName("TeamCity resource")]
@@ -75,6 +76,25 @@ public sealed class ImportTeamCityArtifactOperation : TeamCityOperation
 
     [ScriptAlias("BuildConfigurationId", Obsolete = true)]
     public string? BuildConfigurationId { get; set; }
+    string? IImportCIArtifactsOperation.BuildId 
+    {
+        get => AH.NullIf(this.BranchName + "-", "-") + this.BuildNumber;
+        set
+        {
+            if (value == null)
+            {
+                this.BranchName = null;
+                this.BuildNumber = null;
+            }
+            else
+            {
+                TeamCityClient.ParseBuildId(value, out var branch, out var number);
+                this.BranchName = branch;
+                this.BuildNumber = number.ToString();
+            }
+
+        }
+    }
 
     public async override Task ExecuteAsync(IOperationExecutionContext context)
     {
