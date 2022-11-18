@@ -30,24 +30,6 @@ public sealed class TeamCityCredentials : CIServiceCredentials<TeamCityService>,
 
     public override RichDescription GetCredentialDescription() => new("(secret)");
     public override RichDescription GetServiceDescription() => new(this.TryGetServiceUrlHostName(out var hostName) ? hostName : this.ServiceUrl);
-    public async override ValueTask<ValidationResults> ValidateAsync(ILogSink? log = null, CancellationToken cancellationToken = default)
-    {
-        if (this.ServiceUrl == null)
-            return new(false, "Jenkins server URL is required");
-
-        var client = new TeamCityClient(this, log);
-        int count = 0;
-        await foreach (var project in client.GetProjectsAsync(cancellationToken))
-        {
-            log?.LogDebug("Found project: " + project.Id);
-            if (count++ > 5)
-                break;
-        }
-        if (count == 0)
-            log?.LogWarning("No projects were found.");
-
-        return true;
-    }
 
     internal static bool TryCreateFromCredentialName(string? credentialName, ICredentialResolutionContext? context, [NotNullWhen(true)] out TeamCityCredentials? credentials)
     {

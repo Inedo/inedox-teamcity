@@ -23,17 +23,14 @@ public sealed class QueueTeamCityBuildOperation : TeamCityOperation
     public override string? ResourceName { get; set; }
     [ScriptAlias("Project"), ScriptAlias("Job", Obsolete = true)]
     [DisplayName("Project name")]
-    [DefaultValue("$TeamCityProjectName($CIProject)")]
     [SuggestableValue(typeof(ProjectNameSuggestionProvider))]
     public override string? ProjectName { get; set; }
     [ScriptAlias("BuildConfiguration")]
     [DisplayName("Build configuration")]
-    [DefaultValue("$TeamCityBuildConfigurationName($CIBuild)")]
     [SuggestableValue(typeof(BuildConfigurationNameSuggestionProvider))]
     public override string? BuildConfigurationName { get; set; }
     [ScriptAlias("BuildNumber")]
     [DisplayName("Build number")]
-    [DefaultValue("$TeamCityBuildNumber($CIBuild)")]
     [Description("The build number may be a specific build number, or a special value such as \"lastSuccessful\", \"lastFinished\", or \"lastPinned\". "
         + "To specify a build ID instead, append ':id' as a suffix, e.g. 1234:id")]
     [SuggestableValue(typeof(BuildNumberSuggestionProvider))]
@@ -43,7 +40,7 @@ public sealed class QueueTeamCityBuildOperation : TeamCityOperation
     [ScriptAlias("Artifact")]
     [DisplayName("BuildMaster artifact name")]
     [DefaultValue("Default"), NotNull]
-    [Description("The name of the artifact in BuildMaster to create after artifacts are downloaded from Jenkins.")]
+    [Description("The name of the artifact in BuildMaster to create after artifacts are downloaded from TeamCity.")]
     public string? ArtifactName { get; set; }
     [Category("Advanced")]
     [ScriptAlias("Include")]

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.IO.Compression;
+using System.Reflection;
 using Inedo.Diagnostics;
 using Inedo.Documentation;
 using Inedo.ExecutionEngine.Executer;
@@ -28,20 +29,20 @@ public sealed class ImportTeamCityArtifactOperation : TeamCityOperation, IImport
     public override string? ResourceName { get; set; }
     [ScriptAlias("Project"), ScriptAlias("Job", Obsolete = true)]
     [DisplayName("Project name")]
-    [DefaultValue("$TeamCityProjectName($CIProject)")]
+    [DefaultValue("$CIProject")]
     [SuggestableValue(typeof(ProjectNameSuggestionProvider))]
     public override string? ProjectName { get; set; }
     [ScriptAlias("BuildConfiguration")]
     [DisplayName("Build configuration")]
-    [DefaultValue("$TeamCityBuildConfigurationName($CIBuild)")]
+    [DefaultValue("$CIProjectScope")]
     [SuggestableValue(typeof(BuildConfigurationNameSuggestionProvider))]
     public override string? BuildConfigurationName { get; set; }
     [ScriptAlias("BuildNumber")]
     [DisplayName("Build number")]
-    [DefaultValue("$TeamCityBuildNumber($CIBuild)")]
     [Description("The build number may be a specific build number, or a special value such as \"lastSuccessful\", \"lastFinished\", or \"lastPinned\". "
         + "To specify a build ID instead, append ':id' as a suffix, e.g. 1234:id")]
     [SuggestableValue(typeof(BuildNumberSuggestionProvider))]
+    [DefaultValue("$CIBuildNumber")]
     public string? BuildNumber { get; set; }
 
     [Category("Advanced")]
@@ -98,7 +99,7 @@ public sealed class ImportTeamCityArtifactOperation : TeamCityOperation, IImport
 
     public async override Task ExecuteAsync(IOperationExecutionContext context)
     {
-        if (this.BuildConfigurationId == null)
+        if (!string.IsNullOrEmpty(this.BuildConfigurationId))
             this.LogWarning($"Specifying BuildConfigurationId is no longer supported, and the property value of \"{this.BuildConfigurationId}\" will be ignored. Use BuildConfigurationName instead.");
 
         if (string.IsNullOrEmpty(this.ArtifactName))
@@ -108,24 +109,24 @@ public sealed class ImportTeamCityArtifactOperation : TeamCityOperation, IImport
         if (this.BuildNumber == null)
             throw new ExecutionFailureException("No TeamCity build was specified, and there is no CI build associated with this execution.");
         if (!this.TryCreateClient(context, out var client))
-            throw new ExecutionFailureException($"Could not create a connection to Jenkins resource \"{AH.CoalesceString(this.ResourceName, this.ServerUrl)}\".");
+            throw new ExecutionFailureException($"Could not create a connection to TeamCity resource \"{AH.CoalesceString(this.ResourceName, this.ServerUrl)}\".");
 
         var configName = this.BuildConfigurationName;
-        string? configId = this.BuildConfigurationId;
-        if (string.IsNullOrEmpty(configId))
+        if (string.IsNullOrEmpty(configName))
         {
+            this.LogDebug("No build configuration specified, querying TeamCity...");
             await foreach (var t in client.GetProjectBuildTypesAsync(this.ProjectName, context.CancellationToken))
             {
-                if (string.IsNullOrEmpty(configName) || configName.Equals(t.Name, StringComparison.OrdinalIgnoreCase))
-                {
-                    configId = t.Id;
-                    configName = t.Name;
-                    break;
-                }
+                if (!string.IsNullOrEmpty(configName))
+                    throw new ExecutionFailureException("Multiple build configurations were found for this project; specify which one to import artifacts from.");
+
+                configName = t.Name;
             }
         }
+        if (string.IsNullOrEmpty(configName))
+            throw new ExecutionFailureException("No Build Configuration was specified, and there is no CI build associated with this execution.");
 
-        using var zipStream = await client.DownloadArtifactsAsync(configId!, this.BuildNumber, context.CancellationToken);
+        using var zipStream = await client.DownloadArtifactsAsync(configName, this.BuildNumber, context.CancellationToken);
         var mask = new MaskingContext(this.Includes, this.Excludes);
         if (!mask.MatchAll)
         {
@@ -151,17 +152,21 @@ public sealed class ImportTeamCityArtifactOperation : TeamCityOperation, IImport
 
     protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
     {
-        string buildNumber = config[nameof(this.BuildNumber)];
+        string? val(string name) => AH.NullIf(config[name], this.GetType().GetProperty(name)?.GetCustomAttribute<DefaultValueAttribute>()?.Value?.ToString());
+
+        var projectName = val(nameof(this.ProjectName));
+        var configurationName = val(nameof(this.BuildConfigurationName));
+        var buildNum = val(nameof(this.BuildNumber));
+
+        if (!string.IsNullOrEmpty(configurationName))
+            projectName += $" (${configurationName}";
+
+
         return new ExtendedRichDescription(
-            new RichDescription("Import TeamCity ", new Hilite(config[nameof(this.ArtifactName)]), " Artifact "),
-            new RichDescription("of build ",
-                AH.ParseInt(buildNumber) != null ? "#" : "",
-                new Hilite(buildNumber),
-                " of project ", 
-                new Hilite(config[nameof(this.ProjectName)]),
-                " using configuration \"",
-                config[nameof(this.BuildConfigurationName)]
-            )
+            new RichDescription("Import TeamCity Artifacts"),
+            string.IsNullOrEmpty(projectName)
+                ? new RichDescription("from the associated TeamCity build")
+                : new RichDescription("from build ", new Hilite(buildNum), " in project ", new Hilite(projectName))
         );
     }
 }
