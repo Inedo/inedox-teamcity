@@ -1,5 +1,4 @@
-﻿using System.Net;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Xml;
@@ -64,25 +63,7 @@ internal sealed class TeamCityClient
             }
         }
     }
-    static private DateTimeOffset? tryParseTeamCityDate(string? date)
-    {
-        if (DateTime.TryParse(date, out var result))
-            return result;
 
-        //20220928T021935+0000
-        var regex = new Regex("^(?<year>20\\d\\d)(?<month>\\d\\d)(?<day>\\d\\d)T(?<hour>\\d\\d)(?<minute>\\d\\d)(?<second>\\d\\d)\\+(?<offset>\\d\\d\\d\\d)$", RegexOptions.Compiled);
-        var match = regex.Match(date);
-        if (match.Success)
-            return new DateTime(
-                int.Parse(match.Groups["year"].Value),
-                int.Parse(match.Groups["month"].Value),
-                int.Parse(match.Groups["day"].Value),
-                int.Parse(match.Groups["hour"].Value),
-                int.Parse(match.Groups["minute"].Value),
-                int.Parse(match.Groups["second"].Value)
-            );
-        return null;
-    }
     public async IAsyncEnumerable<CIBuildInfo> GetBuildsAsync(string project, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var url = $"app/rest/builds?locator=defaultFilter:false,project:{Uri.EscapeDataString(project)}&fields=build(id,number,status,state,webUrl,startDate,buildTypeId)";
@@ -92,7 +73,7 @@ internal sealed class TeamCityClient
             var number = (string?)buildElement.Attribute("number");
             var status = (string?)buildElement.Attribute("status");
             var webUrl = (string?)buildElement.Attribute("webUrl");
-            var date = tryParseTeamCityDate(buildElement.Element("startDate")?.Value);
+            var date = TryParseTeamCityDate(buildElement.Element("startDate")?.Value);
             var buildType = (string?)buildElement.Attribute("buildTypeId");
 
             if (id == null || number == null || status == null || webUrl == null || date == null || buildType == null)
@@ -201,5 +182,29 @@ internal sealed class TeamCityClient
 
             url = (string?)xdoc.Root?.Attribute("nextHref");
         }
+    }
+    static private DateTimeOffset? TryParseTeamCityDate(string? date)
+    {
+        if (string.IsNullOrEmpty(date))
+            return null;
+
+        if (DateTime.TryParse(date, out var result))
+            return result;
+
+        //20220928T021935+0000
+        var match = Regex.Match(date, "^(?<year>20\\d\\d)(?<month>\\d\\d)(?<day>\\d\\d)T(?<hour>\\d\\d)(?<minute>\\d\\d)(?<second>\\d\\d)\\+(?<offset>\\d\\d\\d\\d)$");
+        if (match.Success)
+        {
+            return new DateTime(
+                int.Parse(match.Groups["year"].Value),
+                int.Parse(match.Groups["month"].Value),
+                int.Parse(match.Groups["day"].Value),
+                int.Parse(match.Groups["hour"].Value),
+                int.Parse(match.Groups["minute"].Value),
+                int.Parse(match.Groups["second"].Value)
+            );
+        }
+
+        return null;
     }
 }
