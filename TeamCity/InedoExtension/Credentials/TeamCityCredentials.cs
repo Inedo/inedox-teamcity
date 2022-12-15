@@ -20,7 +20,10 @@ namespace Inedo.Extensions.TeamCity.Credentials;
 [PersistFrom("Inedo.Extensions.TeamCity.Credentials.TeamCityTokenSecureCredentials,TeamCity")]
 public sealed class TeamCityCredentials : CIServiceCredentials<TeamCityService>, IMissingPersistentPropertyHandler
 {
-    public string? LegacyUserName;
+    [Persistent]
+    [DisplayName("User name")]
+    [PlaceholderText("For informational/display purposes only")]
+    public override string? UserName { get; set; }
 
     [Persistent(Encrypted = true)]
     [Required]
@@ -28,7 +31,7 @@ public sealed class TeamCityCredentials : CIServiceCredentials<TeamCityService>,
     [FieldEditMode(FieldEditMode.Password)]
     public override SecureString? Password { get; set; }
 
-    public override RichDescription GetCredentialDescription() => new("(secret)");
+    public override RichDescription GetCredentialDescription() => new(AH.CoalesceString(this.UserName,"(secret)"));
     public override RichDescription GetServiceDescription() => new(this.TryGetServiceUrlHostName(out var hostName) ? hostName : this.ServiceUrl);
 
     internal static bool TryCreateFromCredentialName(string? credentialName, ICredentialResolutionContext? context, [NotNullWhen(true)] out TeamCityCredentials? credentials)
@@ -50,8 +53,6 @@ public sealed class TeamCityCredentials : CIServiceCredentials<TeamCityService>,
     {
         if (missingProperties.ContainsKey("ServerUrl"))
             this.ServiceUrl = missingProperties["ServerUrl"];
-        if (missingProperties.ContainsKey("UserName"))
-            this.LegacyUserName = missingProperties["UserName"];
         if (missingProperties.ContainsKey("Token"))
             this.Password = AH.CreateSecureString(missingProperties["Token"]);
     }

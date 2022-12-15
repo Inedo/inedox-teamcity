@@ -44,7 +44,7 @@ public abstract class TeamCityOperation : ExecuteOperation
         if (!TeamCityCredentials.TryCreateFromCredentialName(credentialName, context, out var credentials))
             credentials = new();
 
-        if (!string.IsNullOrEmpty(this.UserName) || !string.IsNullOrEmpty(credentials.LegacyUserName))
+        if (!string.IsNullOrEmpty(this.UserName))
         {
             client = null;
             this.LogWarning("A UserName was specified for TeamCity, which is no longer supported; you'll need to switch to API Tokens.");

@@ -16,7 +16,7 @@ namespace Inedo.Extensions.TeamCity
         public override string? ScopeDisplayName => "Build configuration";
         public override string ApiUrlDisplayName => "TeamCity Server URL";
         public override string PasswordDisplayName => "Personal access token";
-        public override string? UsernameDisplayName => null;
+        public override string? UsernameDisplayName => "User name";
 
         public override IAsyncEnumerable<CIProjectInfo> GetProjectsAsync(TeamCityCredentials credentials, CancellationToken cancellationToken = default)
         {
