@@ -84,12 +84,12 @@ public sealed class QueueTeamCityBuildOperation : TeamCityOperation
 
     public override async Task ExecuteAsync(IOperationExecutionContext context)
     {
-        if (this.BuildConfigurationId == null)
+        if (!string.IsNullOrEmpty(this.BuildConfigurationId))
             this.LogWarning($"Specifying BuildConfigurationId is no longer supported, and the property value of \"{this.BuildConfigurationId}\" will be ignored. Use BuildConfigurationName instead.");
 
-        if (this.ProjectName == null)
+        if (string.IsNullOrEmpty(this.ProjectName))
             throw new ExecutionFailureException("No TeamCity project was specified, and there is no CI build associated with this execution.");
-        if (this.BuildNumber == null)
+        if (string.IsNullOrEmpty(this.BuildNumber))
             throw new ExecutionFailureException("No TeamCity build was specified, and there is no CI build associated with this execution.");
         if (!this.TryCreateClient(context, out var client))
             throw new ExecutionFailureException($"Could not create a connection to TeamCity resource \"{AH.CoalesceString(this.ResourceName, this.ServerUrl)}\".");
