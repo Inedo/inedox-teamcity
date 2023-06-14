@@ -75,8 +75,12 @@ public sealed class ImportTeamCityArtifactOperation : TeamCityOperation, IImport
     [Description("When you specify a Build Number like \"lastSuccessful\", this will output the real TeamCity BuildNumber into a runtime variable.")]
     public string? TeamCityBuildNumber { get; set; }
 
-    [ScriptAlias("BuildConfigurationId", Obsolete = true)]
+    [Category("Advanced")]
+    [ScriptAlias("BuildConfigurationId")]
+    [DisplayName("Build configuration ID")]
+    [Description("TeamCity identifier that targets a single build configuration. May be specified instead of the Project name and Build configuration name.")]
     public string? BuildConfigurationId { get; set; }
+
     string? IImportCIArtifactsOperation.BuildId 
     {
         get => AH.NullIf(this.BranchName + "-", "-") + this.BuildNumber;
@@ -99,17 +103,28 @@ public sealed class ImportTeamCityArtifactOperation : TeamCityOperation, IImport
 
     public async override Task ExecuteAsync(IOperationExecutionContext context)
     {
-        if (!string.IsNullOrEmpty(this.BuildConfigurationId))
-            this.LogWarning($"Specifying BuildConfigurationId is no longer supported, and the property value of \"{this.BuildConfigurationId}\" will be ignored. Use BuildConfigurationName instead.");
-
         if (string.IsNullOrEmpty(this.ArtifactName))
             throw new ExecutionFailureException("ArtifactName was not specified.");
+
+        if (!this.TryCreateClient(context, out var client))
+            throw new ExecutionFailureException($"Could not create a connection to TeamCity resource \"{AH.CoalesceString(this.ResourceName, this.ServerUrl)}\".");
+
+        if (!string.IsNullOrEmpty(this.BuildConfigurationId))
+        {
+            if (!string.IsNullOrEmpty(this.ProjectName) || !string.IsNullOrEmpty(this.BuildConfigurationName))
+                this.LogWarning($"Project (\"{this.ProjectName}\") and BuildConfiguration  ($\"{this.BuildConfigurationName}\") will be ignored when BuildConfigurationId is used.");
+
+            this.LogDebug($"Querying TeamCity for Build Configuration {this.BuildConfigurationId}...");
+            var config = await client.GetBuildTypeByIdAsync(this.BuildConfigurationId, context.CancellationToken);
+
+            this.ProjectName = config.ProjectName;
+            this.BuildConfigurationName = config.Name;
+        }
+
         if (this.ProjectName == null)
             throw new ExecutionFailureException("No TeamCity project was specified, and there is no CI build associated with this execution.");
         if (this.BuildNumber == null)
             throw new ExecutionFailureException("No TeamCity build was specified, and there is no CI build associated with this execution.");
-        if (!this.TryCreateClient(context, out var client))
-            throw new ExecutionFailureException($"Could not create a connection to TeamCity resource \"{AH.CoalesceString(this.ResourceName, this.ServerUrl)}\".");
 
         var configName = this.BuildConfigurationName;
         if (string.IsNullOrEmpty(configName))
@@ -164,9 +179,11 @@ public sealed class ImportTeamCityArtifactOperation : TeamCityOperation, IImport
 
         return new ExtendedRichDescription(
             new RichDescription("Import TeamCity Artifacts"),
-            string.IsNullOrEmpty(projectName)
-                ? new RichDescription("from the associated TeamCity build")
-                : new RichDescription("from build ", new Hilite(buildNum), " in project ", new Hilite(projectName))
+            string.IsNullOrEmpty(this.BuildConfigurationId)
+                ? string.IsNullOrEmpty(projectName)
+                    ? new RichDescription("from the associated TeamCity build")
+                    : new RichDescription("from build ", new Hilite(buildNum), " in project ", new Hilite(projectName))
+                : new RichDescription("from build ", new Hilite(buildNum), " using build configuration ", new Hilite(this.BuildConfigurationId))
         );
     }
 }

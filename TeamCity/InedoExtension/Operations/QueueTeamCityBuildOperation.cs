@@ -29,12 +29,6 @@ public sealed class QueueTeamCityBuildOperation : TeamCityOperation
     [DisplayName("Build configuration")]
     [SuggestableValue(typeof(BuildConfigurationNameSuggestionProvider))]
     public override string? BuildConfigurationName { get; set; }
-    [ScriptAlias("BuildNumber")]
-    [DisplayName("Build number")]
-    [Description("The build number may be a specific build number, or a special value such as \"lastSuccessful\", \"lastFinished\", or \"lastPinned\". "
-        + "To specify a build ID instead, append ':id' as a suffix, e.g. 1234:id")]
-    [SuggestableValue(typeof(BuildNumberSuggestionProvider))]
-    public string? BuildNumber { get; set; }
 
     [Category("Advanced")]
     [ScriptAlias("Artifact")]
@@ -78,51 +72,64 @@ public sealed class QueueTeamCityBuildOperation : TeamCityOperation
     [PlaceholderText("true")]
     public bool? WaitForCompletion { get; set; } = true;
 
-    [Undisclosed]
-    [ScriptAlias("BuildConfigurationId", Obsolete = true)]
+    [Category("Advanced")]
+    [ScriptAlias("BuildConfigurationId")]
+    [DisplayName("Build configuration ID")]
+    [Description("TeamCity identifier that targets a single build configuration. May be specified instead of the Project name and Build configuration name.")]
     public string? BuildConfigurationId { get; set; }
 
     public override async Task ExecuteAsync(IOperationExecutionContext context)
     {
-        if (!string.IsNullOrEmpty(this.BuildConfigurationId))
-            this.LogWarning($"Specifying BuildConfigurationId is no longer supported, and the property value of \"{this.BuildConfigurationId}\" will be ignored. Use BuildConfigurationName instead.");
-
-        if (string.IsNullOrEmpty(this.ProjectName))
-            throw new ExecutionFailureException("No TeamCity project was specified, and there is no CI build associated with this execution.");
-        if (string.IsNullOrEmpty(this.BuildNumber))
-            throw new ExecutionFailureException("No TeamCity build was specified, and there is no CI build associated with this execution.");
         if (!this.TryCreateClient(context, out var client))
             throw new ExecutionFailureException($"Could not create a connection to TeamCity resource \"{AH.CoalesceString(this.ResourceName, this.ServerUrl)}\".");
 
-        var configName = this.BuildConfigurationName;
-        string? configId = this.BuildConfigurationId;
-        if (string.IsNullOrEmpty(configId))
+        if (string.IsNullOrEmpty(this.BuildConfigurationId))
         {
+            if (string.IsNullOrEmpty(this.ProjectName))
+                throw new ExecutionFailureException("No TeamCity project was specified, and there is no CI build associated with this execution.");
+            
             await foreach (var t in client.GetProjectBuildTypesAsync(this.ProjectName, context.CancellationToken))
             {
-                if (string.IsNullOrEmpty(configName) || configName.Equals(t.Name, StringComparison.OrdinalIgnoreCase))
-                {
-                    configId = t.Id;
-                    configName = t.Name;
-                    break;
-                }
+                if (!string.IsNullOrEmpty(this.BuildConfigurationName) && !this.BuildConfigurationName.Equals(t.Name, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                if (!string.IsNullOrEmpty(this.BuildConfigurationId))
+                    throw new ExecutionFailureException("Multiple build configurations were found for this project; specify which one to queue a build for.");
+
+                this.BuildConfigurationId = t.Id;
             }
+
+            if (string.IsNullOrEmpty(this.BuildConfigurationId))
+                throw new ExecutionFailureException($"BuildConfiguration \"{this.BuildConfigurationName}\" not found on Project \"{this.ProjectName}\".");
+        }
+        else
+        {
+            if (!string.IsNullOrEmpty(this.ProjectName) || !string.IsNullOrEmpty(this.BuildConfigurationName))
+                this.LogWarning($"Project (\"{this.ProjectName}\") and BuildConfiguration  ($\"{this.BuildConfigurationName}\") will be ignored when BuildConfigurationId is used.");
         }
 
-        await client.QueueBuildAsync(configId!, this.BranchName, context.CancellationToken);
+        this.LogInformation($"Queueing \"{this.BuildConfigurationId}\" {(!string.IsNullOrEmpty(this.BranchName) ? " using branch " + this.BranchName : "")}...");
+
+        await client.QueueBuildAsync(this.BuildConfigurationId!, this.BranchName, context.CancellationToken);
     }
 
     protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
     {
         return new ExtendedRichDescription(
             new RichDescription("Queue TeamCity Build"),
-            new RichDescription(
-                "for project ", 
-                new Hilite(config[nameof(this.ProjectName)]), 
-                " configuration ", 
-                new Hilite(config[nameof(this.BuildConfigurationName)]), 
-                !string.IsNullOrEmpty(this.BranchName) ? " using branch " + this.BranchName : ""
-            )
+            string.IsNullOrEmpty(config[nameof(this.BuildConfigurationId)])
+            ?   new RichDescription(
+                    "for project ", 
+                    new Hilite(config[nameof(this.ProjectName)]), 
+                    " configuration ", 
+                    new Hilite(config[nameof(this.BuildConfigurationName)]), 
+                    !string.IsNullOrEmpty(this.BranchName) ? " using branch " + this.BranchName : ""
+                )
+            : new RichDescription(
+                    "for build configuration ",
+                    new Hilite(config[nameof(this.BuildConfigurationId)]),
+                    !string.IsNullOrEmpty(this.BranchName) ? " using branch " + this.BranchName : ""
+                )
         );
     }
 }
