@@ -45,19 +45,28 @@ public sealed class ImportTeamCityArtifactOperation : TeamCityOperation, IImport
     [DefaultValue("$CIBuildNumber")]
     public string? BuildNumber { get; set; }
 
-    [Category("Advanced")]
+    [Category("Artifact options")]
     [ScriptAlias("Artifact")]
     [DisplayName("BuildMaster artifact name")]
     [DefaultValue("Default")]
     [Description("The name of the artifact in BuildMaster to create after artifacts are downloaded from TeamCity.")]
     public string? ArtifactName { get; set; }
-    [Category("Advanced")]
+    [Category("Artifact options")]
+    [ScriptAlias("Overwrite")]
+    [PlaceholderText("false")]
+    public bool Overwrite { get; set; }
+    [Category("Artifact options")]
+    [ScriptAlias("IgnoreEmptyArtifact")]
+    [DisplayName("Ignore empty artifact warning")]
+    [Description("A warning will be logged if no files are captured unless this option is set")]
+    public bool IgnoreEmptyArtifact { get; set; }
+    [Category("Artifact options")]
     [ScriptAlias("Include")]
     [DisplayName("Include files")]
     [DefaultValue("**")]
     [Description(CommonDescriptions.MaskingHelp)]
     public IEnumerable<string>? Includes { get; set; }
-    [Category("Advanced")]
+    [Category("Artifact options")]
     [ScriptAlias("Exclude")]
     [DisplayName("Exclude files")]
     [Description(CommonDescriptions.MaskingHelp)]
@@ -74,7 +83,6 @@ public sealed class ImportTeamCityArtifactOperation : TeamCityOperation, IImport
     [PlaceholderText("e.g. $ActualBuildNumber")]
     [Description("When you specify a Build Number like \"lastSuccessful\", this will output the real TeamCity BuildNumber into a runtime variable.")]
     public string? TeamCityBuildNumber { get; set; }
-
     [Category("Advanced")]
     [ScriptAlias("BuildConfigurationId")]
     [DisplayName("Build configuration ID")]
@@ -105,43 +113,41 @@ public sealed class ImportTeamCityArtifactOperation : TeamCityOperation, IImport
     {
         if (string.IsNullOrEmpty(this.ArtifactName))
             throw new ExecutionFailureException("ArtifactName was not specified.");
+        if (string.IsNullOrEmpty(this.BuildNumber))
+            throw new ExecutionFailureException("No TeamCity build was specified, and there is no CI build associated with this execution.");
 
         if (!this.TryCreateClient(context, out var client))
             throw new ExecutionFailureException($"Could not create a connection to TeamCity resource \"{AH.CoalesceString(this.ResourceName, this.ServerUrl)}\".");
 
-        if (!string.IsNullOrEmpty(this.BuildConfigurationId))
+        if (string.IsNullOrEmpty(this.BuildConfigurationId))
+        {
+            if (string.IsNullOrEmpty(this.ProjectName))
+                throw new ExecutionFailureException("No TeamCity project was specified, and there is no CI build associated with this execution.");
+
+            await foreach (var t in client.GetProjectBuildTypesAsync(this.ProjectName, context.CancellationToken))
+            {
+                if (!string.IsNullOrEmpty(this.BuildConfigurationName) && !this.BuildConfigurationName.Equals(t.Name, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                if (!string.IsNullOrEmpty(this.BuildConfigurationId))
+                    throw new ExecutionFailureException("Multiple build configurations were found for this project; specify which one to queue a build for.");
+
+                this.BuildConfigurationId = t.Id;
+            }
+
+            if (string.IsNullOrEmpty(this.BuildConfigurationId))
+                throw new ExecutionFailureException($"BuildConfiguration \"{this.BuildConfigurationName}\" not found on Project \"{this.ProjectName}\".");
+        }
+        else
         {
             if (!string.IsNullOrEmpty(this.ProjectName) || !string.IsNullOrEmpty(this.BuildConfigurationName))
                 this.LogWarning($"Project (\"{this.ProjectName}\") and BuildConfiguration  ($\"{this.BuildConfigurationName}\") will be ignored when BuildConfigurationId is used.");
-
-            this.LogDebug($"Querying TeamCity for Build Configuration {this.BuildConfigurationId}...");
-            var config = await client.GetBuildTypeByIdAsync(this.BuildConfigurationId, context.CancellationToken);
-
-            this.ProjectName = config.ProjectName;
-            this.BuildConfigurationName = config.Name;
         }
 
-        if (this.ProjectName == null)
-            throw new ExecutionFailureException("No TeamCity project was specified, and there is no CI build associated with this execution.");
-        if (this.BuildNumber == null)
-            throw new ExecutionFailureException("No TeamCity build was specified, and there is no CI build associated with this execution.");
-
-        var configName = this.BuildConfigurationName;
-        if (string.IsNullOrEmpty(configName))
-        {
-            this.LogDebug("No build configuration specified, querying TeamCity...");
-            await foreach (var t in client.GetProjectBuildTypesAsync(this.ProjectName, context.CancellationToken))
-            {
-                if (!string.IsNullOrEmpty(configName))
-                    throw new ExecutionFailureException("Multiple build configurations were found for this project; specify which one to import artifacts from.");
-
-                configName = t.Name;
-            }
-        }
-        if (string.IsNullOrEmpty(configName))
+        if (string.IsNullOrEmpty(this.BuildConfigurationId))
             throw new ExecutionFailureException("No Build Configuration was specified, and there is no CI build associated with this execution.");
 
-        using var zipStream = await client.DownloadArtifactsAsync(configName, this.BuildNumber, context.CancellationToken);
+        using var zipStream = await client.DownloadArtifactsAsync(this.BuildConfigurationId, this.BuildNumber, context.CancellationToken);
         var mask = new MaskingContext(this.Includes, this.Excludes);
         if (!mask.MatchAll)
         {
@@ -162,7 +168,7 @@ public sealed class ImportTeamCityArtifactOperation : TeamCityOperation, IImport
             zipStream.Position = 0;
         }
 
-        await context.CreateBuildMasterArtifactAsync(this.ArtifactName, zipStream, false, context.CancellationToken);
+        await context.CreateBuildMasterArtifactAsync(this.ArtifactName, zipStream, this.Overwrite, context.CancellationToken);
     }
 
     protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
