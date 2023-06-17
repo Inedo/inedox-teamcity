@@ -145,6 +145,7 @@ internal sealed class TeamCityClient
 
         buffer.Position = 0;
         using var content = new StreamContent(buffer);
+        content.Headers.ContentType = new ("application/xml");
         using var res = await this.httpClient.PostAsync("app/rest/buildQueue", content, cancellationToken).ConfigureAwait(false);
         res.EnsureSuccessStatusCode();
     }
