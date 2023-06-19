@@ -116,6 +116,8 @@ public sealed class QueueTeamCityBuildOperation : TeamCityOperation
             .Select(p => new KeyValuePair<string, string>(Uri.UnescapeDataString(p[0]), Uri.UnescapeDataString(p[1])));
 
         var status = await client.QueueBuildAsync(this.BuildConfigurationId!, this.BranchName, additionalProperties, context.CancellationToken);
+        this.LogInformation($"Build {status.BuildNumber} created.");
+        this.TeamCityBuildNumber = status.BuildNumber;
 
         if (this.WaitForCompletion == true)
         {
