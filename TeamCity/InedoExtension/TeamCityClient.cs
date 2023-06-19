@@ -159,7 +159,7 @@ internal sealed class TeamCityClient
         var xdoc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken)
             ?? throw new ExecutionFailureException("Invalid response: expected XML.");
 
-        return new TeamCityBuildStatus(xdoc.Root!);
+        return TeamCityBuildStatus.FromXElement(xdoc.Root!);
     }
     public async Task<Stream> DownloadArtifactsAsync(string buildConfigId, string buildId, CancellationToken cancellationToken = default)
     {
@@ -176,7 +176,7 @@ internal sealed class TeamCityClient
         var xdoc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken)
             ?? throw new ExecutionFailureException($"Invalid response from {status.Href}: expected XML.");
 
-        return new TeamCityBuildStatus(xdoc.Root!);
+        return TeamCityBuildStatus.FromXElement(xdoc.Root!);
     }
     public static void ParseBuildId(string buildId, out string? branchName, out int buildNumber)
     {
