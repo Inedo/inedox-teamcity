@@ -4,20 +4,11 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using Inedo.Diagnostics;
+using Inedo.ExecutionEngine.Executer;
 using Inedo.Extensibility.CIServers;
 using Inedo.Extensions.TeamCity.Credentials;
 
-#nullable enable
-
 namespace Inedo.Extensions.TeamCity;
-
-internal sealed record TeamCityBuildType(string Id, string Name, string ProjectName)
-{
-    public static TeamCityBuildType FromXElement(XElement t)
-        => new ((string?) t.Attribute("id") ?? string.Empty, (string?) t.Attribute("name") ?? string.Empty, (string?) t.Attribute("projectName") ?? string.Empty);
-};
-
-internal sealed record TeamCityBuildInfo(List<string> Artifacts, List<KeyValuePair<string, string>> Properties, List<TeamCityBuildType> BuildTypes);
 
 internal sealed class TeamCityClient
 {
@@ -127,7 +118,7 @@ internal sealed class TeamCityClient
         foreach (var t in types)
             yield return t;
     }
-    public async Task QueueBuildAsync(string buildConfigId, string? branchName = null, CancellationToken cancellationToken = default)
+    public async Task<TeamCityBuildStatus> QueueBuildAsync(string buildConfigId, string? branchName = null, IEnumerable<KeyValuePair<string, string>>? additionalProperties = null, CancellationToken cancellationToken = default)
     {
         using var buffer = new MemoryStream();
         using (var writer = XmlWriter.Create(buffer, new XmlWriterSettings { OmitXmlDeclaration = true }))
@@ -140,6 +131,21 @@ internal sealed class TeamCityClient
             writer.WriteAttributeString("id", buildConfigId);
             writer.WriteEndElement(); // buildType
 
+            var props = additionalProperties?.ToList();
+            if (props?.Count > 0)
+            {
+                writer.WriteStartElement("properties");
+                foreach (var p in props)
+                {
+                    writer.WriteStartElement("property");
+                    writer.WriteAttributeString("name", p.Key);
+                    writer.WriteAttributeString("value", p.Value);
+                    writer.WriteEndElement(); // property
+                }
+
+                writer.WriteEndElement(); // properties
+            }
+
             writer.WriteEndElement(); // build
         }
 
@@ -148,6 +154,12 @@ internal sealed class TeamCityClient
         content.Headers.ContentType = new ("application/xml");
         using var res = await this.httpClient.PostAsync("app/rest/buildQueue", content, cancellationToken).ConfigureAwait(false);
         res.EnsureSuccessStatusCode();
+
+        using var stream = await res.Content.ReadAsStreamAsync(cancellationToken);
+        var xdoc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken)
+            ?? throw new ExecutionFailureException("Invalid response: expected XML.");
+
+        return new TeamCityBuildStatus(xdoc.Root!);
     }
     public async Task<Stream> DownloadArtifactsAsync(string buildConfigId, string buildId, CancellationToken cancellationToken = default)
     {
@@ -157,6 +169,14 @@ internal sealed class TeamCityClient
         await stream.CopyToAsync(temp, cancellationToken).ConfigureAwait(false);
         temp.Position = 0;
         return temp;
+    }
+    public async Task<TeamCityBuildStatus> GetBuildStatusAsync(TeamCityBuildStatus status, CancellationToken cancellationToken = default)
+    {
+        using var stream = await this.httpClient.GetStreamAsync(status.Href, cancellationToken);
+        var xdoc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken)
+            ?? throw new ExecutionFailureException($"Invalid response from {status.Href}: expected XML.");
+
+        return new TeamCityBuildStatus(xdoc.Root!);
     }
     public static void ParseBuildId(string buildId, out string? branchName, out int buildNumber)
     {

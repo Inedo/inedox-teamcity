@@ -110,7 +110,26 @@ public sealed class QueueTeamCityBuildOperation : TeamCityOperation
 
         this.LogInformation($"Queueing \"{this.BuildConfigurationId}\" {(!string.IsNullOrEmpty(this.BranchName) ? " using branch " + this.BranchName : "")}...");
 
-        await client.QueueBuildAsync(this.BuildConfigurationId!, this.BranchName, context.CancellationToken);
+        var additionalProperties = this.AdditionalParameters?.Split('&', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(p => p.Split('=', 2, StringSplitOptions.TrimEntries))
+            .Where(p => p.Length == 2)
+            .Select(p => new KeyValuePair<string, string>(Uri.UnescapeDataString(p[0]), Uri.UnescapeDataString(p[1])));
+
+        var status = await client.QueueBuildAsync(this.BuildConfigurationId!, this.BranchName, additionalProperties, context.CancellationToken);
+
+        if (this.WaitForCompletion == true)
+        {
+            this.LogDebug("Waiting for build to complete...");
+
+            while (!status.Finished)
+            {
+                await Task.Delay(2000, context.CancellationToken);
+                context.CancellationToken.ThrowIfCancellationRequested();
+                status = await client.GetBuildStatusAsync(status, context.CancellationToken);
+            }
+
+            this.LogDebug("Build completed.");
+        }
     }
 
     protected override ExtendedRichDescription GetDescription(IOperationConfiguration config)
