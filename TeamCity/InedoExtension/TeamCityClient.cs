@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Collections.Generic;
+using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Xml;
@@ -62,6 +63,13 @@ internal sealed class TeamCityClient
     public async IAsyncEnumerable<CIBuildInfo> GetBuildsAsync(string project, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var url = $"app/rest/builds?locator=defaultFilter:false,project:{Uri.EscapeDataString(project)}&fields=build(id,number,status,state,webUrl,startDate,buildTypeId)";
+
+        var buildTypeNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        await foreach (var bt in this.GetProjectBuildTypesAsync(project, cancellationToken).ConfigureAwait(false))
+        {
+            buildTypeNames[bt.Id] = bt.Name;
+        }
+
         await foreach (var buildElement in this.GetPaginatedResultsAsync(url, "build", cancellationToken).ConfigureAwait(false))
         {
             var id = (string?)buildElement.Attribute("id");
@@ -69,12 +77,14 @@ internal sealed class TeamCityClient
             var status = (string?)buildElement.Attribute("status");
             var webUrl = (string?)buildElement.Attribute("webUrl");
             var date = TryParseTeamCityDate(buildElement.Element("startDate")?.Value);
-            var buildType = (string?)buildElement.Attribute("buildTypeId");
+            var buildTypeId = (string?)buildElement.Attribute("buildTypeId");
 
-            if (id == null || number == null || status == null || webUrl == null || date == null || buildType == null)
+            if (id == null || number == null || status == null || webUrl == null || date == null || buildTypeId == null)
+                continue;
+            if (!buildTypeNames.TryGetValue(buildTypeId, out var buildTypeName))
                 continue;
 
-            yield return new CIBuildInfo(id, buildType, number, date.Value.UtcDateTime, status, webUrl);
+            yield return new CIBuildInfo(id, buildTypeName, number, date.Value.UtcDateTime, status, webUrl);
         }
     }
     public async Task<TeamCityBuildInfo> GetBuildAsync(string buildId, CancellationToken cancellationToken = default)
@@ -108,7 +118,7 @@ internal sealed class TeamCityClient
     }
     public async IAsyncEnumerable<TeamCityBuildType> GetProjectBuildTypesAsync(string project, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var url = $"app/rest/projects/{Uri.EscapeDataString(project)}?fields=buildTypes";
+        var url = $"app/rest/projects/{Uri.EscapeDataString(project)}?fields=buildTypes(buildType)";
         var xdoc = await this.GetXDocumentAsync(url, cancellationToken).ConfigureAwait(false);
 
         var types = xdoc
