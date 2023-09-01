@@ -37,7 +37,7 @@ public abstract class TeamCityOperation : ExecuteOperation
 
     internal bool TryCreateClient(IOperationExecutionContext context, [NotNullWhen(true)] out TeamCityClient? client)
     {
-        var project = SecureResource.TryCreate(this.ResourceName, context) as TeamCityProject;
+        var project = SecureResource.TryCreate(SecureResourceType.CIProject, this.ResourceName, context) as TeamCityProject;
 
         var credentialName = this.CredentialName ?? project?.CredentialName;
 

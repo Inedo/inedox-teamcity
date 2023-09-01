@@ -15,11 +15,8 @@ using Inedo.Web;
 
 namespace Inedo.BuildMasterExtensions.TeamCity.Operations;
 
-[DisplayName("Import Artifact from TeamCity")]
 [Description("Downloads an artifact from the specified TeamCity server and saves it to the artifact library.")]
 [ScriptAlias("Import-Artifact")]
-[Tag("artifacts")]
-[Tag("teamcity")]
 public sealed class ImportTeamCityArtifactOperation : TeamCityOperation, IImportCIArtifactsOperation
 {
     [ScriptAlias("From")]

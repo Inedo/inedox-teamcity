@@ -11,7 +11,6 @@ using Inedo.Web;
 
 namespace Inedo.Extensions.TeamCity.Operations;
 
-[DisplayName("Queue TeamCity Build")]
 [Description("Queues a build in TeamCity, optionally waiting for its completion.")]
 [ScriptAlias("Queue-Build")]
 public sealed class QueueTeamCityBuildOperation : TeamCityOperation

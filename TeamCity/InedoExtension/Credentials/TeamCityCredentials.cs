@@ -47,7 +47,7 @@ public sealed class TeamCityCredentials : CIServiceCredentials<TeamCityService>,
         return credentials != null;
     }
     internal static bool TryCreateFromResourceName(string? resourceName, ICredentialResolutionContext? context, [NotNullWhen(true)] out TeamCityCredentials? credentials)
-        => TryCreateFromCredentialName(SecureResource.TryCreate(resourceName, context)?.CredentialName, context, out credentials);
+        => TryCreateFromCredentialName(SecureResource.TryCreate(SecureResourceType.CIProject, resourceName, context)?.CredentialName, context, out credentials);
 
     void IMissingPersistentPropertyHandler.OnDeserializedMissingProperties(IReadOnlyDictionary<string, string> missingProperties)
     {
