@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Runtime.CompilerServices;
 using Inedo.Extensibility;
 using Inedo.Extensibility.Credentials;
 using Inedo.Extensions.TeamCity.Credentials;
@@ -17,7 +12,7 @@ internal abstract class TeamCitySuggestionProvider : ISuggestionProvider
     {
     }
 
-    protected virtual IEnumerable<string> DefaultResults => Enumerable.Empty<string>();
+    protected virtual IEnumerable<string> DefaultResults => [];
 
     protected abstract IAsyncEnumerable<string> GetSuggestionsAsync(TeamCityClient client, IComponentConfiguration config, CancellationToken cancellationToken);
 
@@ -50,11 +45,8 @@ internal abstract class TeamCitySuggestionProvider : ISuggestionProvider
     {
         return this.GetSuggestionsInternalAsync(startsWith, config, cancellationToken);
     }
-    async Task<IEnumerable<string>> ISuggestionProvider.GetSuggestionsAsync(IComponentConfiguration config)
+    IAsyncEnumerable<string> ISuggestionProvider.GetSuggestionsAsync(IComponentConfiguration config, CancellationToken cancellationToken)
     {
-        var list = new List<string>();
-        await foreach (var s in this.GetSuggestionsInternalAsync(string.Empty, config, default).ConfigureAwait(false))
-            list.Add(s);
-        return list;
+        return this.GetSuggestionsInternalAsync(string.Empty, config, cancellationToken);
     }
 }

@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
 using Inedo.Documentation;
 using Inedo.Extensibility.VariableTemplates;
 using Inedo.Extensions.TeamCity.Credentials;
@@ -20,19 +17,16 @@ public sealed class TeamCityProjectNameVariableSource : DynamicListVariableType,
     [Required]
     public string? ResourceName { get; set; }
 
-    public override async Task<IEnumerable<string>> EnumerateListValuesAsync(VariableTemplateContext context)
+    public override async IAsyncEnumerable<string> EnumerateListValuesAsync(VariableTemplateContext context)
     {
         if (!TeamCityCredentials.TryCreateFromResourceName(this.ResourceName, context, out var credentials))
-            return Enumerable.Empty<string>();
+            yield break;
 
-        var list = new List<string>();
         await foreach (var p in new TeamCityClient(credentials).GetProjectsAsync().ConfigureAwait(false))
         {
             if (!string.IsNullOrEmpty(p.DisplayName))
-                list.Add(p.DisplayName);
+                yield return p.DisplayName;
         }
-
-        return list;
     }
 
     public override RichDescription GetDescription()
